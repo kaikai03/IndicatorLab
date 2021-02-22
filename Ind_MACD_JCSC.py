@@ -7,13 +7,38 @@ import QUANTAXIS as QA
 from QAIndicatorStructExt import QA_DataStruct_Indicators_Ext
 
 class Ind_Model:
-    def __init__(self,data):
+    def __init__(self,data, pramas_default=None):
 #         if not isinstance(data, type(QA.OUTPUT_FORMAT.DATASTRUCT)):
 #             raise TypeError('Must be DATASTRUCT')
+        if pramas_default is None:
+            self._pramas_default = self.on_set_params_default()
+        else:
+            self._pramas_default = pramas_default
+            
+        if not isinstance(self._pramas_default, dict):
+            raise TypeError('_pramas_default MUST BE DICT')
+            
+        self.pramas = copy.deepcopy(self._pramas_default)
         self.data = data
         self.ind_df = None
         self.decision_df = None
         
+    def change_pramas(self,**dic):
+        for k in dic.keys():
+            self.pramas[k] = dic[k]
+    
+    def reset_pramas(self):
+        self.pramas = copy.deepcopy(self._pramas_default)
+    
+    @property
+    def cur_pramas(self):
+        return self.pramas
+    @property
+    def default_pramas(self):
+        return self._pramas_default
+    @property
+    def keys_pramas(self):
+        return self._pramas_default.keys()    
 
     @property
     def ind(self):
@@ -21,12 +46,19 @@ class Ind_Model:
 
     @property
     def decision(self):
+        if self.decision_df is None  or not isinstance(self.decision_df, pd.DataFrame):
+            print("decision_df:",self.decision_df)
+            raise Exception('on_desition_structure error')
         return QA_DataStruct_Indicators_Ext(self.decision_df)
      
+        
+    def on_set_params_default(self) -> dict:
+        raise NotImplementedError
+        
     def on_indicator_structure(self, data):
         raise NotImplementedError
         
-    def on_desition_structure(self, data, ind_data):
+    def on_desition_structure(self, data, ind_data) -> pd.DataFrame:
         raise NotImplementedError
 
     def fit(self):
@@ -39,16 +71,24 @@ class Ind_Model:
             raise Exception(err)
             
 
-class MACD(Ind_Model):
+class MACD_JCSC(Ind_Model):
     def __init__(self,data):
         super().__init__(data)
-        self._pramas_default = {}
-        self.pramas = copy.deepcopy(self._pramas_default)
+
+    def __repr__(self):
+        return '< MACD in pramas  {}  >'.format(str (self.pramas))
+    
+    def on_set_params_default(self):
+        return {'SHORT':12,'LONG':26,'M':9}
         
     def on_indicator_structure(self, data):
-        return self.MACD_JCSC(data)
+        return self.MACD_JCSC(data,**self.pramas)
+    
+    def on_desition_structure(self, data, ind_data):
+        return None
         
     def MACD_JCSC(self,dataframe,SHORT=12,LONG=26,M=9):
+        print(SHORT,LONG,M)
         """
         1.DIF向上突破DEA，买入信号参考。
         2.DIF向下跌破DEA，卖出信号参考。

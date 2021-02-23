@@ -24,7 +24,10 @@ class Ind_Model:
         
 
     def __repr__(self):
-        return '< {} in pramas  {} ,{},{} >'.format(self.ind_name, str (self.pramas), 'fitted' if self.is_fitted else 'not fit', 'has desition' if self.has_desition else 'not desition')
+        return '< {} in pramas  {} ,{},{} >'.format(self.ind_name, 
+                                                    str (self.pramas), 
+                                                    'not fit' if not self.is_fitted else 'fitted:'+ str(self.keys_ind), 
+                                                    'not desition' if not self.has_desition else 'has desition')
         
     def change_pramas(self,**dic):
         for k in dic.keys():

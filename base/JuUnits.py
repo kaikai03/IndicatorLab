@@ -1,4 +1,5 @@
 from IPython.display import display
+import inspect
 
 display_handle = None
 def stream_print_on():
@@ -20,3 +21,6 @@ def stream_print_wrap(f):
         stream_print_off()
         return ret
     return inner
+
+def help_source_code(moulde)
+    return inspect.getsourcelines(moulde)

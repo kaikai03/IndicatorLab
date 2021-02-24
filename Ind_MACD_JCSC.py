@@ -3,13 +3,17 @@ import numpy as np
 import pandas as pd
 
 import QUANTAXIS as QA
+from QUANTAXIS.QAUtil.QAParameter import FREQUENCE
+
 import Ind_Model_Base
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+
 
 class MACD_JCSC(Ind_Model_Base.Ind_Model):
-    def __init__(self,data):
-        super().__init__(data, 'MACD')
+    def __init__(self,data, frequence=FREQUENCE.DAY):
+        super().__init__(data, 'MACD', frequence)
 
     
     def on_set_params_default(self):
@@ -39,16 +43,21 @@ class MACD_JCSC(Ind_Model_Base.Ind_Model):
         ZERO=0
         return pd.DataFrame({'DIFF':DIFF,'DEA':DEA,'MACD':MACD,'CROSS_JC':CROSS_JC,'CROSS_SC':CROSS_SC,'ZERO':ZERO})
     
-    def plot(self,figsize=(16,6)):
+    
+    def plot(self,figsize=(16,6)) -> dict:
         fig = plt.figure(figsize=figsize)
         groups = self.ind_df.groupby(level=1)
+        ax_dic = {}
         for idx,item in enumerate(groups):
             inds_ = item[1].reset_index('code',drop=True)
             ax = fig.add_subplot(len(groups),1,idx+1)
-            index_ = [pd.to_datetime(x).strftime('%Y%m%d %H%M%S') for x in inds_.index.values]
-
             
-        #     d = item[1].reset_index(('date','code'),drop=True)
+            
+            ##axis不转成字符串的话，bar和line的x轴有时候对不上，原因未知
+            
+            formater = '%Y%m%d' if self.is_low_frequence else '%Y%m%d %H%M%S'
+            index_ = [pd.to_datetime(x).strftime(formater) for x in inds_.index.values]
+#             d = item[1].reset_index(('date','code'),drop=True)
 
             ax.set_title(item[0],color='r', loc ='left', pad=-10) 
             DD = inds_[['DIFF','DEA']]
@@ -57,11 +66,10 @@ class MACD_JCSC(Ind_Model_Base.Ind_Model):
             macd = inds_['MACD']
             macd.index = index_
             macd.plot(kind='bar', ax=ax)
-        #     print([pd.to_datetime(x) for x in inds_.index.values])
-        #     print(inds_.index)
-        #     print(inds_['MACD'].index)
-        #     print(inds_[['DIFF','DEA']].index)
+            ax.xaxis.set_major_locator(ticker.MaxNLocator(10))
+            plt.xticks(rotation = 0)
+            ax_dic[item[0]]=ax
+        return ax_dic
+    
 
-        #     print(inds_['MACD'])
-        #     print(inds_[['DIFF','DEA']])
     

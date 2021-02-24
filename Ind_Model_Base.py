@@ -3,9 +3,13 @@ import pandas as pd
 import copy
 
 from QAIndicatorStructExt import QA_DataStruct_Indicators_Ext
+from QUANTAXIS.QAUtil.QAParameter import FREQUENCE
+
+__LOW_FREQUENCE__ = [FREQUENCE.YEAR, FREQUENCE.QUARTER, FREQUENCE.MONTH, FREQUENCE.WEEK, FREQUENCE.DAY]      
+
 
 class Ind_Model:
-    def __init__(self,data, ind_name, pramas_default=None):
+    def __init__(self,data, ind_name, frequence=FREQUENCE.DAY, pramas_default=None):
 #         if not isinstance(data, type(QA.OUTPUT_FORMAT.DATASTRUCT)):
 #             raise TypeError('Must be DATASTRUCT')
         if pramas_default is None:
@@ -21,7 +25,7 @@ class Ind_Model:
         self.data = data
         self.ind_df = None
         self.desition_df = None
-        
+        self.frequence = frequence
 
     def __repr__(self):
         return '< {} in pramas  {} ,{},{} >'.format(self.ind_name, 
@@ -59,6 +63,10 @@ class Ind_Model:
     def has_desition(self):
         return not self.desition_df is None
     
+    @property
+    def is_low_frequence(self):
+        return self.frequence in __LOW_FREQUENCE__
+    
 
     @property
     def ind(self):
@@ -95,3 +103,4 @@ class Ind_Model:
         except Exception as err:
             raise Exception(err)
             
+    

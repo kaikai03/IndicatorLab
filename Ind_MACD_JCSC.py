@@ -18,6 +18,7 @@ class MACD_JCSC(Ind_Model_Base.Ind_Model):
     
     def on_set_params_default(self):
         return {'SHORT':12,'LONG':26,'M':9}
+    
         
     def on_indicator_structuring(self, data):
         #return data.add_func(self.MACD_JCSC,**self.pramas)
@@ -25,14 +26,13 @@ class MACD_JCSC(Ind_Model_Base.Ind_Model):
 
     
     def on_desition_structuring(self, data, ind_data):
+        """
+        1.DIF向上突破DEA,res为1，买入信号参考。
+        2.DIF向下跌破DEA,res为-1，卖出信号参考。
+        """
         return pd.DataFrame({'res':ind_data['CROSS_JC'] + ind_data['CROSS_SC']*-1})
         
     def MACD_JCSC(self,dataframe,SHORT=12,LONG=26,M=9):
-        print(SHORT,LONG,M)
-        """
-        1.DIF向上突破DEA，买入信号参考。
-        2.DIF向下跌破DEA，卖出信号参考。
-        """
         CLOSE=dataframe.close
         DIFF =QA.EMA(CLOSE,SHORT) - QA.EMA(CLOSE,LONG)
         DEA = QA.EMA(DIFF,M)
@@ -40,14 +40,15 @@ class MACD_JCSC(Ind_Model_Base.Ind_Model):
 
         CROSS_JC=QA.CROSS(DIFF,DEA)
         CROSS_SC=QA.CROSS(DEA,DIFF)
-        ZERO=0
-        return pd.DataFrame({'DIFF':DIFF,'DEA':DEA,'MACD':MACD,'CROSS_JC':CROSS_JC,'CROSS_SC':CROSS_SC,'ZERO':ZERO})
+
+        return pd.DataFrame({'DIFF':DIFF,'DEA':DEA,'MACD':MACD,'CROSS_JC':CROSS_JC,'CROSS_SC':CROSS_SC})
+
+
     
     
     def plot(self,figsize=(16,6)) -> dict:
         fig = plt.figure(figsize=figsize)
         groups = self.ind_df.groupby(level=1)
-        ax_dic = {}
         for idx,item in enumerate(groups):
             inds_ = item[1].reset_index('code',drop=True)
             ax = fig.add_subplot(len(groups),1,idx+1)
@@ -68,9 +69,6 @@ class MACD_JCSC(Ind_Model_Base.Ind_Model):
             macd.plot(kind='bar', ax=ax)
             ax.xaxis.set_major_locator(ticker.MaxNLocator(10))
             plt.xticks(rotation = 0)
-            ax_dic[item[0]]=ax
-        ax_dic['fig']=fig
-        return ax_dic
     
 
     

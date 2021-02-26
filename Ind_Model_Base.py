@@ -26,6 +26,7 @@ class Ind_Model:
         self.ind_df = None
         self.desition_df = None
         self.frequence = frequence
+        
 
     def __repr__(self):
         return '< {} in pramas  {} ,{},{} >'.format(self.ind_name, 
@@ -90,6 +91,8 @@ class Ind_Model:
         
     def on_desition_structuring(self, data, ind_data) -> pd.DataFrame:
         raise NotImplementedError
+        
+        
         
     def excute_for_multicode(self, data, func, **pramas):
         return data.groupby(level=1, as_index=False, group_keys=False).apply(func,**pramas)

@@ -69,6 +69,7 @@ class MACD_JCSC(Ind_Model_Base.Ind_Model):
             ax.xaxis.set_major_locator(ticker.MaxNLocator(10))
             plt.xticks(rotation = 0)
             ax_dic[item[0]]=ax
+        ax_dic['fig']=fig
         return ax_dic
     
 

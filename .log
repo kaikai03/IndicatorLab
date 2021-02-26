@@ -1,0 +1,127 @@
+2021-02-25 13:04:34,149 [16976] DEBUG    root:197: [JupyterRequire] Configuration requested: {'paths': {'d3': 'https://d3js.org/d3.v5.min'}, 'shim': {}}
+2021-02-25 13:07:21,808 [1344] DEBUG    root:197: [JupyterRequire] Configuration requested: {'paths': {'d3': 'https://d3js.org/d3.v5.min'}, 'shim': {}}
+2021-02-25 13:08:35,402 [6692] DEBUG    root:197: [JupyterRequire] Configuration requested: {'paths': {'d3': 'https://d3js.org/d3.v5.min'}, 'shim': {}}
+2021-02-25 13:09:20,786 [6692] DEBUG    root:197: [JupyterRequire] Configuration requested: {'paths': {'d3': 'https://d3js.org/d3.v5.min'}, 'shim': {}}
+2021-02-25 13:12:51,923 [6692] DEBUG    jupyter_nbutils.utils:120: [JupyterRequire] Jupyter nbextension version: 6.2.0
+2021-02-25 13:12:51,926 [6692] DEBUG    jupyter_nbutils.utils:145: [JupyterRequire] Installing extension: jupyter_require
+2021-02-25 13:12:53,120 [6692] INFO     jupyter_nbutils.utils:149: [JupyterRequire] E:\Anaconda3\lib\site-packages\ipykernel\kernelbase.py:16: VisibleDeprecationWarning: zmq.eventloop.minitornado is deprecated in pyzmq 14.0 and will be removed.
+    Install tornado itself to use zmq with the tornado IOLoop.
+    
+  from jupyter_client.session import utcnow as now
+Jupyter Require found itself running outside of Jupyter.
+Traceback (most recent call last):
+  File "E:\Anaconda3\Scripts\jupyter-nbextension-script.py", line 10, in <module>
+    sys.exit(main())
+  File "E:\Anaconda3\lib\site-packages\jupyter_core\application.py", line 254, in launch_instance
+    return super(JupyterApp, cls).launch_instance(argv=argv, **kwargs)
+  File "E:\Anaconda3\lib\site-packages\traitlets\config\application.py", line 658, in launch_instance
+    app.start()
+  File "E:\Anaconda3\lib\site-packages\notebook\nbextensions.py", line 980, in start
+    super().start()
+  File "E:\Anaconda3\lib\site-packages\jupyter_core\application.py", line 243, in start
+    self.subapp.start()
+  File "E:\Anaconda3\lib\site-packages\notebook\nbextensions.py", line 708, in start
+    self.install_extensions()
+  File "E:\Anaconda3\lib\site-packages\notebook\nbextensions.py", line 687, in install_extensions
+    **kwargs
+  File "E:\Anaconda3\lib\site-packages\notebook\nbextensions.py", line 203, in install_nbextension_python
+    m, nbexts = _get_nbextension_metadata(module)
+  File "E:\Anaconda3\lib\site-packages\notebook\nbextensions.py", line 1114, in _get_nbextension_metadata
+    m = import_item(module)
+  File "E:\Anaconda3\lib\site-packages\traitlets\utils\importstring.py", line 42, in import_item
+    return __import__(parts[0])
+  File "E:\Anaconda3\lib\site-packages\jupyter_require\__init__.py", line 34, in <module>
+    from .notebook import link_css
+  File "E:\Anaconda3\lib\site-packages\jupyter_require\notebook.py", line 30, in <module>
+    from .core import execute_with_requirements
+  File "E:\Anaconda3\lib\site-packages\jupyter_require\core.py", line 279, in <module>
+    require = RequireJS()
+  File "E:\Anaconda3\lib\site-packages\jupyter_require\core.py", line 90, in __new__
+    raise EnvironmentError(msg)
+OSError: Jupyter Require found itself running outside of Jupyter.
+
+2021-02-25 13:12:53,120 [6692] DEBUG    jupyter_nbutils.utils:153: [JupyterRequire] Success.
+2021-02-25 13:13:04,120 [6692] DEBUG    jupyter_nbutils.utils:120: [JupyterRequire] Jupyter nbextension version: 6.2.0
+2021-02-25 13:13:04,122 [6692] DEBUG    jupyter_nbutils.utils:145: [JupyterRequire] Installing extension: jupyter_require
+2021-02-25 13:13:05,018 [6692] INFO     jupyter_nbutils.utils:149: [JupyterRequire] E:\Anaconda3\lib\site-packages\ipykernel\kernelbase.py:16: VisibleDeprecationWarning: zmq.eventloop.minitornado is deprecated in pyzmq 14.0 and will be removed.
+    Install tornado itself to use zmq with the tornado IOLoop.
+    
+  from jupyter_client.session import utcnow as now
+Jupyter Require found itself running outside of Jupyter.
+Traceback (most recent call last):
+  File "E:\Anaconda3\Scripts\jupyter-nbextension-script.py", line 10, in <module>
+    sys.exit(main())
+  File "E:\Anaconda3\lib\site-packages\jupyter_core\application.py", line 254, in launch_instance
+    return super(JupyterApp, cls).launch_instance(argv=argv, **kwargs)
+  File "E:\Anaconda3\lib\site-packages\traitlets\config\application.py", line 658, in launch_instance
+    app.start()
+  File "E:\Anaconda3\lib\site-packages\notebook\nbextensions.py", line 980, in start
+    super().start()
+  File "E:\Anaconda3\lib\site-packages\jupyter_core\application.py", line 243, in start
+    self.subapp.start()
+  File "E:\Anaconda3\lib\site-packages\notebook\nbextensions.py", line 708, in start
+    self.install_extensions()
+  File "E:\Anaconda3\lib\site-packages\notebook\nbextensions.py", line 687, in install_extensions
+    **kwargs
+  File "E:\Anaconda3\lib\site-packages\notebook\nbextensions.py", line 203, in install_nbextension_python
+    m, nbexts = _get_nbextension_metadata(module)
+  File "E:\Anaconda3\lib\site-packages\notebook\nbextensions.py", line 1114, in _get_nbextension_metadata
+    m = import_item(module)
+  File "E:\Anaconda3\lib\site-packages\traitlets\utils\importstring.py", line 42, in import_item
+    return __import__(parts[0])
+  File "E:\Anaconda3\lib\site-packages\jupyter_require\__init__.py", line 34, in <module>
+    from .notebook import link_css
+  File "E:\Anaconda3\lib\site-packages\jupyter_require\notebook.py", line 30, in <module>
+    from .core import execute_with_requirements
+  File "E:\Anaconda3\lib\site-packages\jupyter_require\core.py", line 279, in <module>
+    require = RequireJS()
+  File "E:\Anaconda3\lib\site-packages\jupyter_require\core.py", line 90, in __new__
+    raise EnvironmentError(msg)
+OSError: Jupyter Require found itself running outside of Jupyter.
+
+2021-02-25 13:13:05,019 [6692] DEBUG    jupyter_nbutils.utils:153: [JupyterRequire] Success.
+2021-02-25 13:13:05,022 [6692] DEBUG    root:197: [JupyterRequire] Configuration requested: {'paths': {'d3': 'https://d3js.org/d3.v5.min'}, 'shim': {}}
+2021-02-25 13:13:13,935 [6692] DEBUG    jupyter_nbutils.utils:120: [JupyterRequire] Jupyter nbextension version: 6.2.0
+2021-02-25 13:13:13,938 [6692] DEBUG    jupyter_nbutils.utils:145: [JupyterRequire] Installing extension: jupyter_require
+2021-02-25 13:13:14,824 [6692] INFO     jupyter_nbutils.utils:149: [JupyterRequire] E:\Anaconda3\lib\site-packages\ipykernel\kernelbase.py:16: VisibleDeprecationWarning: zmq.eventloop.minitornado is deprecated in pyzmq 14.0 and will be removed.
+    Install tornado itself to use zmq with the tornado IOLoop.
+    
+  from jupyter_client.session import utcnow as now
+Jupyter Require found itself running outside of Jupyter.
+Traceback (most recent call last):
+  File "E:\Anaconda3\Scripts\jupyter-nbextension-script.py", line 10, in <module>
+    sys.exit(main())
+  File "E:\Anaconda3\lib\site-packages\jupyter_core\application.py", line 254, in launch_instance
+    return super(JupyterApp, cls).launch_instance(argv=argv, **kwargs)
+  File "E:\Anaconda3\lib\site-packages\traitlets\config\application.py", line 658, in launch_instance
+    app.start()
+  File "E:\Anaconda3\lib\site-packages\notebook\nbextensions.py", line 980, in start
+    super().start()
+  File "E:\Anaconda3\lib\site-packages\jupyter_core\application.py", line 243, in start
+    self.subapp.start()
+  File "E:\Anaconda3\lib\site-packages\notebook\nbextensions.py", line 708, in start
+    self.install_extensions()
+  File "E:\Anaconda3\lib\site-packages\notebook\nbextensions.py", line 687, in install_extensions
+    **kwargs
+  File "E:\Anaconda3\lib\site-packages\notebook\nbextensions.py", line 203, in install_nbextension_python
+    m, nbexts = _get_nbextension_metadata(module)
+  File "E:\Anaconda3\lib\site-packages\notebook\nbextensions.py", line 1114, in _get_nbextension_metadata
+    m = import_item(module)
+  File "E:\Anaconda3\lib\site-packages\traitlets\utils\importstring.py", line 42, in import_item
+    return __import__(parts[0])
+  File "E:\Anaconda3\lib\site-packages\jupyter_require\__init__.py", line 34, in <module>
+    from .notebook import link_css
+  File "E:\Anaconda3\lib\site-packages\jupyter_require\notebook.py", line 30, in <module>
+    from .core import execute_with_requirements
+  File "E:\Anaconda3\lib\site-packages\jupyter_require\core.py", line 279, in <module>
+    require = RequireJS()
+  File "E:\Anaconda3\lib\site-packages\jupyter_require\core.py", line 90, in __new__
+    raise EnvironmentError(msg)
+OSError: Jupyter Require found itself running outside of Jupyter.
+
+2021-02-25 13:13:14,824 [6692] DEBUG    jupyter_nbutils.utils:153: [JupyterRequire] Success.
+2021-02-25 13:14:18,527 [6692] DEBUG    root:197: [JupyterRequire] Configuration requested: {'paths': {'d3': 'https://d3js.org/d3.v5.min'}, 'shim': {}}
+2021-02-25 13:15:02,574 [15484] DEBUG    root:197: [JupyterRequire] Configuration requested: {'paths': {'d3': 'https://d3js.org/d3.v5.min'}, 'shim': {}}
+2021-02-25 13:16:48,401 [15484] DEBUG    root:197: [JupyterRequire] Configuration requested: {'paths': {'d3': 'https://d3js.org/d3.v5.min'}, 'shim': {}}
+2021-02-25 14:13:22,272 [15484] DEBUG    root:197: [JupyterRequire] Configuration requested: {'paths': {'d3': 'https://d3js.org/d3.v5.min'}, 'shim': {}}
+2021-02-25 14:14:45,584 [15484] DEBUG    root:197: [JupyterRequire] Configuration requested: {'paths': {'d3': 'https://d3js.org/d3.v5.min.js'}, 'shim': {}}

@@ -46,7 +46,7 @@ class MACD_JCSC(Ind_Model_Base.Ind_Model):
 
     
     
-    def plot(self,figsize=(16,6)) -> dict:
+    def plot(self,figsize=(1120/72,420/72)) -> dict:
         fig = plt.figure(figsize=figsize)
         groups = self.ind_df.groupby(level=1)
         for idx,item in enumerate(groups):

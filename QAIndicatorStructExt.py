@@ -46,5 +46,5 @@ class QA_DataStruct_Indicators_Ext(QA_DataStruct_Indicators):
         '''get当天的就未来函数了'''
         inds = self.get_ind_offset(code, date, offset=-1)
         if len(inds)<=1:
-            return None
+            return [None]
         return inds.iloc[0]

@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 
 import QUANTAXIS as QA
-from QUANTAXIS.QAUtil.QAParameter import FREQUENCE
 
 import Ind_Model_Base
 
@@ -12,7 +11,7 @@ import matplotlib.ticker as ticker
 
 
 class MACD_JCSC(Ind_Model_Base.Ind_Model):
-    def __init__(self,data, frequence=FREQUENCE.DAY):
+    def __init__(self,data, frequence=QA.FREQUENCE.DAY):
         super().__init__(data, 'MACD', frequence)
 
     

@@ -12,7 +12,7 @@ import matplotlib.ticker as ticker
 
 class OBV(Ind_Model_Base.Ind_Model):
     '''能量潮指标改进版'''
-    def __init__(self,data, frequence=FREQUENCE.DAY):
+    def __init__(self,data, frequence=QA.FREQUENCE.DAY):
         super().__init__(data, 'OBV_EX', frequence)
     
     def on_set_params_default(self):

@@ -2,14 +2,15 @@
 import pandas as pd
 import copy
 
-from QAIndicatorStructExt import QA_DataStruct_Indicators_Ext
-from QUANTAXIS.QAUtil.QAParameter import FREQUENCE
+import QUANTAXIS as QA
 
-__LOW_FREQUENCE__ = [FREQUENCE.YEAR, FREQUENCE.QUARTER, FREQUENCE.MONTH, FREQUENCE.WEEK, FREQUENCE.DAY]      
+from QAIndicatorStructExt import QA_DataStruct_Indicators_Ext
+
+__LOW_FREQUENCE__ = [QA.FREQUENCE.YEAR, QA.FREQUENCE.QUARTER, QA.FREQUENCE.MONTH, QA.FREQUENCE.WEEK, QA.FREQUENCE.DAY]      
 
 
 class Ind_Model:
-    def __init__(self,data, ind_name, frequence=FREQUENCE.DAY, pramas_default=None):
+    def __init__(self,data, ind_name, frequence=QA.FREQUENCE.DAY, pramas_default=None):
 #         if not isinstance(data, type(QA.OUTPUT_FORMAT.DATASTRUCT)):
 #             raise TypeError('Must be DATASTRUCT')
         if pramas_default is None:

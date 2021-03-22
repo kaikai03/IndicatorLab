@@ -25,3 +25,6 @@ def stream_print_wrap(f):
 
 def help_source_code(moulde):
     return inspect.getsourcelines(moulde)
+
+def excute_for_multidates(data, func, level=0, **pramas):
+    return data.groupby(level=level, group_keys=False).apply(func,**pramas)

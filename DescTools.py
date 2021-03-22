@@ -12,6 +12,8 @@ import sweetviz as sv
 import time
 import datetime
 
+from base.JuUnits import excute_for_multidates
+
 plt.rcParams['font.sans-serif']=['SimHei'] 
 plt.rcParams['font.serif'] = ['KaiTi']
 plt.rcParams['axes.unicode_minus'] = False 
@@ -62,8 +64,6 @@ def get_Q3_list(start, end):
 def get_Q4_list(start, end):
     return [str(y)+'-12-31' for y in range(int(start), int(end)+1)]
 
-def excute_for_multidates(data, func, **pramas):
-    return data.groupby(level=0, group_keys=False).apply(func,**pramas)
 
 def drop_by_quantile_multidates(obj, floor=.00,upper=1., column=None):
     return excute_for_multidates(obj, drop_by_quantile, floor=floor,upper=upper, column=column).sort_index()
@@ -104,3 +104,22 @@ def get_stock_name(code):
     if isinstance(code, str):
         return QA.QA_fetch_stock_name(code)
     raise TypeError('code MUST BE list or str')
+    
+def get_all_blocks(type_):
+    a = QA.QA_fetch_stock_block_adv().data
+    return a[a['type']=='type_'].index.get_level_values('blockname').unique().to_list()
+
+def get_rank(data, codes=None,quantile=False, column=None):
+    '''get_rank(a,['000001','000002'],column=['totalAssets','ROE'])'''
+    if len(data.index.names) >= 2:
+        res = excute_for_multidates(data, lambda x: x.rank(ascending=False,pct=quantile))
+        if codes:
+            if column:
+                res=res.loc[pd.IndexSlice[:,codes], column]
+            else:
+                res=res.loc[pd.IndexSlice[:,codes],slice(None)]
+    else:
+        res =  data.rank(ascending=False,pct=quantile)
+        if codes:
+            res = res.loc[codes]
+    return res

@@ -1,0 +1,1 @@
+PLINK.EXE -C -N -D 127.0.0.1:7070 root@xx6.14.20.200  -pw y.d

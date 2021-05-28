@@ -48,3 +48,7 @@ def get_ic_desc(ic_data):
     
 def get_ic_ir(ic_data):
     return ic_data.mean()/ic_data.std()
+
+def auto_describe(df):
+    report = sv.analyze(df,pairwise_analysis='auto')
+    report.show_notebook()

@@ -52,3 +52,8 @@ def get_ic_ir(ic_data):
 def auto_describe(df):
     report = sv.analyze(df,pairwise_analysis='auto')
     report.show_notebook()
+    
+def get_winning_rate(ic_data_df):
+    ic_mean_sign = np.sign(ic_data_df.mean())
+    return (np.sign(ic_data_df) == ic_mean_sign).sum()/ic_data_df.count()
+    

@@ -54,6 +54,11 @@ def auto_describe(df):
     report.show_notebook()
     
 def get_winning_rate(ic_data_df):
+    """
+       因子胜率
+       :param ic_data_df:{pd.DataFrame，Index[date,]} --rankIC值, 
+       :return: {pd.DataFrame}
+    """
     ic_mean_sign = np.sign(ic_data_df.mean())
     return (np.sign(ic_data_df) == ic_mean_sign).sum()/ic_data_df.count()
     

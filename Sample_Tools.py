@@ -78,9 +78,9 @@ def get_stock_name(code):
 
     
 ########### benchmark samples #################
-def get_sample_by_zs(name='沪深300', start=None, end=None, gap=60, only_main=True):
+def get_sample_by_zs(name='沪深300', start=None, end=None, gap=60, freq=QA.FREQUENCE.DAY, only_main=True):
     codes_list = get_codes_by_market(codes_list=get_blocks_view('zs')[name], sse='all',only_main=only_main)
-    data = get_data(codes_list, start=start, end=end, gap=gap, freq=QA.FREQUENCE.DAY, market=MARKET_TYPE.STOCK_CN)
+    data = get_data(codes_list, start=start, end=end, gap=gap, freq=freq, market=MARKET_TYPE.STOCK_CN)
     return data
     
     

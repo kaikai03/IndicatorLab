@@ -22,7 +22,8 @@ def get_rank_ic(factor_standardized, ret_forward):
     ic_data = pd.Series([None]*len(common_index),index=common_index)
     
     df = pd.DataFrame({'factor_standardized':factor_standardized, 'ret_f':ret_forward})
-    df = df[~pd.isnull(df['factor_standardized'])][~pd.isnull(df['ret_f'])]
+    df = df[(~pd.isnull(df['factor_standardized'])) & (~pd.isnull(df['ret_f']))]
+    
 
     # 计算相关系数
     for dt in df.index.get_level_values(0).unique():

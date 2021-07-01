@@ -60,6 +60,7 @@ def get_winning_rate(ic_data_df):
        :param ic_data_df:{pd.DataFrame，Index[date,]} --rankIC值, 
        :return: {pd.DataFrame}
     """
-    ic_mean_sign = np.sign(ic_data_df.mean())
-    return (np.sign(ic_data_df) == ic_mean_sign).sum()/ic_data_df.count()
+    df_ = ic_data_df.dropna()
+    ic_mean_sign = np.sign(df_.mean())
+    return (np.sign(df_) == ic_mean_sign).sum()/df_.count()
     

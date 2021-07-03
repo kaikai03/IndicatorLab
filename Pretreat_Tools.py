@@ -83,7 +83,8 @@ def binning(df, deal_column:str,box_count:int, labels=None, inplace=True):
         assert len(labels)==box_count, 'labels的数量必须与分箱数相等'
         labels_= labels
     else:
-        labels_= np.array(range(4))+1
+        labels_= np.array(range(box_count))+1
+        labels_ = labels_[::-1]
     if inplace:
         df['group_label'] = pd.qcut(df[deal_column], box_count, labels=labels_,retbins=False)
         return df

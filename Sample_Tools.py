@@ -88,9 +88,12 @@ def get_sample_by_zs(name='沪深300', start=None, end=None, gap=60, freq=QA.FRE
 def get_forward_return(stocks_df,column):
     '''计算(未来)下一个回报率
     :param stocks_df: {pd.DataFrame 或 stock_struct}
+    :param column: {string}
     :return: {pd.Series}
     '''
-    return stocks_df[column].groupby(level=1, group_keys=False).apply(lambda x:((x-x.shift(1))/x.shift(1)).shift(-1))
+    ret = stocks_df[column].groupby(level=1, group_keys=False).apply(lambda x:((x-x.shift(1))/x.shift(1)).shift(-1))
+    ret.name = 'ret_forward'
+    return ret
 
 def get_current_return(stocks_df,column):
     '''计算当期的回报率

@@ -52,6 +52,26 @@ def get_data(codes_list, start=None, end=None, gap=60, freq=QA.FREQUENCE.DAY, ma
 #                                output=QA.OUTPUT_FORMAT.DATASTRUCT)
     return data
 
+def get_index_data(code, start=None, end=None, gap=60, freq=QA.FREQUENCE.DAY):
+    ''':param freq： --只能比day频率高，需要更低频需要从day重新采样。
+    '''
+    assert ((not start is None) or (not end is None)), 'start 和 end 必须有一个'
+    if start is None:
+        start_ = trade_date_sse[trade_date_sse.index(end) - gap]
+    else:
+        start_ = start
+    if end is None:
+        end_ = trade_date_sse[trade_date_sse.index(start) + gap]
+    else:
+        end_ = end
+        
+    if freq == QA.FREQUENCE.DAY:
+        data = QA.QA_fetch_index_day_adv(code, start_, end_)
+    else:
+        data = QA.QA_fetch_index_min_adv(code, start_, end_,frequence=freq)
+
+    return data
+
 def resample_stockdata_low(stock_df,freq="M"):
     '''低频数据重新按时间降采样, 月周天采样
         :param freq：{str} --in[?D，?w, ?M, Q]
@@ -77,12 +97,29 @@ def get_stock_name(code):
     raise TypeError('code MUST BE list or str')
 
     
-########### benchmark samples #################
+########### samples #################
 def get_sample_by_zs(name='沪深300', start=None, end=None, gap=60, freq=QA.FREQUENCE.DAY, only_main=True):
     codes_list = get_codes_by_market(codes_list=get_blocks_view('zs')[name], sse='all',only_main=only_main)
     data = get_data(codes_list, start=start, end=end, gap=gap, freq=freq, market=MARKET_TYPE.STOCK_CN)
     return data
+
+
+########### benchmark samples #################
+def get_benchmark(name=None, code=None, start=None, end=None, gap=60, freq=QA.FREQUENCE.DAY):
+    '''优先name，如果name不为空，但未查询到，会报错处理
+    '''
+    assert ((not name is None) or (not code is None)), 'name 和 code 必须有一个'
+    assert ((not start is None) or (not end is None)), 'start 和 end 必须有一个'
     
+    code_ = code
+    if name is not None:
+        index_list = QA.QA_fetch_index_list_adv()
+        target = index_list[index_list['name']==name]
+        assert len(target) > 0 , "name: %s 未查询到" % name
+        code_ = target.code.tolist()
+    
+    return get_index_data(code_, start=start, end=end, gap=gap, freq=freq)
+
     
 ########### indicator #################
 def get_forward_return(stocks_df,column):

@@ -6,7 +6,8 @@ import QUANTAXIS as QA
 
 from QAIndicatorStructExt import QA_DataStruct_Indicators_Ext
 
-__LOW_FREQUENCE__ = [QA.FREQUENCE.YEAR, QA.FREQUENCE.QUARTER, QA.FREQUENCE.MONTH, QA.FREQUENCE.WEEK, QA.FREQUENCE.DAY]      
+from base.Constants import LOW_FREQUENCE
+
 
 
 class Ind_Model:
@@ -67,7 +68,7 @@ class Ind_Model:
     
     @property
     def is_low_frequence(self):
-        return self.frequence in __LOW_FREQUENCE__
+        return self.frequence in LOW_FREQUENCE
     
 
     @property
@@ -85,12 +86,15 @@ class Ind_Model:
     
 
     def on_set_params_default(self) -> dict:
+        #初始化时设置默认参数
         raise NotImplementedError
         
     def on_indicator_structuring(self, data) -> pd.DataFrame:
+        #构造因子
         raise NotImplementedError
         
     def on_desition_structuring(self, data, ind_data) -> pd.DataFrame:
+        #生成因子结论，非必要
         raise NotImplementedError
         
         
@@ -107,4 +111,6 @@ class Ind_Model:
         except Exception as err:
             raise Exception(err)
             
-    
+    def checking(self,benchmark=None):
+        print('evaluation table')
+        

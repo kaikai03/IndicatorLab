@@ -79,6 +79,7 @@ def resample_stockdata_low(stock_df,freq="M"):
     '''
     if np.sum([char in ["d",'D'] for char in list(freq)])>0:
         tmp = stock_df.groupby(level=1).apply(lambda x: x.reset_index('code',drop=True).resample(freq,closed='left', label='left').first())
+        tmp = tmp.dropna()
     else:
         tmp = stock_df.groupby(level=1).apply(lambda x: x.reset_index('code',drop=True).resample(freq,closed='right', label='right').last())
     #groupby level=1，导致index顺序翻转，转回原index顺序
@@ -117,6 +118,9 @@ def get_benchmark(name=None, code=None, start=None, end=None, gap=60, freq=QA.FR
         target = index_list[index_list['name']==name]
         assert len(target) > 0 , "name: %s 未查询到" % name
         code_ = target.code.tolist()
+        if name == '沪深300':
+            # 沪深300会查出上证和深证的两个代码，
+            code_ = code_[0:1]
     
     return get_index_data(code_, start=start, end=end, gap=gap, freq=freq)
 

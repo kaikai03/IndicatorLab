@@ -15,7 +15,7 @@ import sweetviz as sv
 
 import time
 import datetime
-
+import re
 
 from base.JuUnits import excute_for_multidates
 import base.JuUnits as u
@@ -273,11 +273,22 @@ def get_quarter_list(start_year, end_year, quarter_ordesr=[1,2,3,4], generate_la
         return res_date,res_lables
     return res_date
 
+def get_next_report_date(cur_date):
+    assert len(re.findall(r"(\d{4}-\d{2}-\d{2})",cur_date)) > 0, '日期格式必须为：xxxx-xx-xx；当前输入：%s' % cur_date
+    year = cur_date[0:4]
+    month_day = cur_date[4:10]
+    date_element = ['-03-31', '-06-30', '-09-30', '-12-31']
+    if month_day in date_element:
+        index = date_element.index(month_day)
+        next_index = index +1 if index != 3 else 0
+        year = str(int(year)+1) if next_index==0 else year
+        return year+date_element[next_index]
+    else:
+        month = cur_date[5:7]
+        date_element = ['-03-31','-03-31','-03-31','-03-31','-06-30','-06-30','-06-30','-09-30','-09-30','-09-30','-12-31','-12-31','-12-31']
+        return year+date_element[int(month)]
 
 
-
-
-    
     
 ###############  other  #########################
 

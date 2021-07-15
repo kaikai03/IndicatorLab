@@ -104,7 +104,7 @@ def get_sample_by_zs(name='沪深300', start=None, end=None, gap=60, freq=QA.FRE
     data = get_data(codes_list, start=start, end=end, gap=gap, freq=freq, market=MARKET_TYPE.STOCK_CN)
     return data
 
-
+  
 ########### benchmark samples #################
 def get_benchmark(name=None, code=None, start=None, end=None, gap=60, freq=QA.FREQUENCE.DAY):
     '''优先name，如果name不为空，但未查询到，会报错处理
@@ -173,7 +173,28 @@ def add_industry(stocks_df, hy_source='swhy', inplace=True):
         return stocks_df.assign(industry=stocks_df.index.get_level_values(1).map(industry))
 
     
+def add_report_inds(data_df, inds_names=['totalCapital']):
+    data_sorted = data_df.sort_index(level=0)
+    codes = data_sorted.index.get_level_values(1).unique().tolist()
+    date_ = data_sorted.index.get_level_values(0)
+    date_start = get_pre_report_date(date_.min())
+    date_end = get_next_report_date(date_.max())
+    report_df = QA.QA_fetch_financial_report_adv(codes, date_start,date_end,ltype='EN').data[inds_names]
 
+    report_starts = report_df.index.get_level_values(0)
+    report_ends = list(map(lambda x: pd.Timestamp(get_next_report_date(x))- pd.Timedelta(days=1), [str(i)[0:10] for i in report_starts]))
+    report_df = report_df.assign(start=report_starts,end=report_ends) 
+        
+    inds_ = []
+    for ind_name in inds_names:
+        series_tmp = []
+        for report in report_df.itertuples():
+            code = report.Index[1]
+            index_slice=data_sorted.loc[(slice(getattr(report,'start'),getattr(report,'end')), code), :].index
+            series_tmp.append(pd.Series(getattr(report,ind_name),index=index_slice,name=ind_name))
+        inds_.append(pd.concat(series_tmp,axis=0))
+    
+    return pd.concat([data_sorted, *inds_],axis=1)
 
 ########### block #################
 def get_all_blocks(hy_source='swhy'):
@@ -274,9 +295,14 @@ def get_quarter_list(start_year, end_year, quarter_ordesr=[1,2,3,4], generate_la
     return res_date
 
 def get_next_report_date(cur_date):
-    assert len(re.findall(r"(\d{4}-\d{2}-\d{2})",cur_date)) > 0, '日期格式必须为：xxxx-xx-xx；当前输入：%s' % cur_date
-    year = cur_date[0:4]
-    month_day = cur_date[4:10]
+    cur_date_ = cur_date
+    if isinstance(cur_date, pd.Timestamp):
+        cur_date_ = cur_date.strftime('%Y-%m-%d')
+        
+    assert len(re.findall(r"(\d{4}-\d{2}-\d{2})",cur_date_)) > 0, '日期格式必须为：xxxx-xx-xx；当前输入：%s' % cur_date_
+    
+    year = cur_date_[0:4]
+    month_day = cur_date_[4:10]
     date_element = ['-03-31', '-06-30', '-09-30', '-12-31']
     if month_day in date_element:
         index = date_element.index(month_day)
@@ -284,11 +310,31 @@ def get_next_report_date(cur_date):
         year = str(int(year)+1) if next_index==0 else year
         return year+date_element[next_index]
     else:
-        month = cur_date[5:7]
+        month = cur_date_[5:7]
         date_element = ['-03-31','-03-31','-03-31','-03-31','-06-30','-06-30','-06-30','-09-30','-09-30','-09-30','-12-31','-12-31','-12-31']
         return year+date_element[int(month)]
 
-
+def get_pre_report_date(cur_date):
+    cur_date_ = cur_date
+    if isinstance(cur_date, pd.Timestamp):
+        cur_date_ = cur_date.strftime('%Y-%m-%d')
+        
+    assert len(re.findall(r"(\d{4}-\d{2}-\d{2})",cur_date_)) > 0, '日期格式必须为：xxxx-xx-xx；当前输入：%s' % cur_date_
+    
+    year = cur_date_[0:4]
+    month_day = cur_date_[4:10]
+    date_element = ['-03-31', '-06-30', '-09-30', '-12-31']
+    if month_day in date_element:
+        index = date_element.index(month_day)
+        pre_index = index-1 if index >=0 else 3
+        year = str(int(year)-1) if pre_index==3 else year
+        return year+date_element[pre_index]
+    else:
+        month = cur_date_[5:7]
+        date_element = ['-12-31','-12-31','-12-31','-12-31','-03-31','-03-31','-03-31','-06-30','-06-30','-06-30','-09-30','-09-30','-09-30']
+        if int(month) <=3:
+            return str(int(year)-1)+date_element[int(month)]
+        return year+date_element[int(month)]
     
 ###############  other  #########################
 

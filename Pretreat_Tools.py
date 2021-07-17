@@ -12,18 +12,20 @@ def neutralize(factor:pd.Series, data, categorical:list=None, logarithmetics:lis
         :param logarithmetics：{list}  --指明要对对数化的列
         注：被categorical的column的value必须是字符串。
         注：一般来说，顺序是 去极值->中心化->标准化
+        注：单截面操作
     '''    
-    X = data    
+    X = data.copy()
     # 对数化
     if not logarithmetics is None:
         X[logarithmetics] = np.log(X[logarithmetics])
     # 哑变量
     if not categorical is None:
         X = pd.get_dummies(X,categorical)
-
+        
+#     print(X)
+        
     model = linear_model.LinearRegression().fit(X, factor)
-    factor_fitted = factor - model.predict(X)
-    neutralize_factor = factor - factor_fitted
+    neutralize_factor = factor - model.predict(X)
 
     return neutralize_factor
 

@@ -1,2 +1,2 @@
-PLINK.EXE -v -N -D 127.0.0.1:7070 root@xx6.14.20.200  -pw yxx.dxx
+PLINK.EXE -v -C -N -D 127.0.0.1:7070 root@xx6.14.20.200  -pw yxx.dxx
 git config --global http.proxy socks5://127.0.0.1:7070

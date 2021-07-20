@@ -180,21 +180,25 @@ def add_report_inds(data_df, inds_names=['totalCapital']):
     date_start = get_pre_report_date(date_.min())
     date_end = get_next_report_date(date_.max())
     report_df = QA.QA_fetch_financial_report_adv(codes, date_start,date_end,ltype='EN').data[inds_names]
-
+    report_df = report_df.sort_index(level=0)
+    
     report_starts = report_df.index.get_level_values(0)
     report_ends = list(map(lambda x: pd.Timestamp(get_next_report_date(x))- pd.Timedelta(days=1), [str(i)[0:10] for i in report_starts]))
     report_df = report_df.assign(start=report_starts,end=report_ends) 
-        
-    inds_ = []
-    for ind_name in inds_names:
-        series_tmp = []
-        for report in report_df.itertuples():
-            code = report.Index[1]
-            index_slice=data_sorted.loc[(slice(getattr(report,'start'),getattr(report,'end')), code), :].index
-            series_tmp.append(pd.Series(getattr(report,ind_name),index=index_slice,name=ind_name))
-        inds_.append(pd.concat(series_tmp,axis=0))
+
+
+    data_sorted[inds_names]= np.nan
+    l = len(inds_names)
+    def setx(x):
+        code = x.name[1]
+        if l > 1:
+            data_sorted.loc[(slice(x['start'],x['end']), code), inds_names] = x[inds_names].values
+        else:
+            data_sorted.loc[(slice(x['start'],x['end']), code), inds_names] = x[inds_names[0]]
+            
+    report_df.apply(setx,axis=1)
     
-    return pd.concat([data_sorted, *inds_],axis=1)
+    return data_sorted
 
 ########### block #################
 def get_all_blocks(hy_source='swhy'):
@@ -314,7 +318,7 @@ def get_next_report_date(cur_date):
         date_element = ['-03-31','-03-31','-03-31','-03-31','-06-30','-06-30','-06-30','-09-30','-09-30','-09-30','-12-31','-12-31','-12-31']
         return year+date_element[int(month)]
 
-def get_pre_report_date(cur_date):
+def get_pre_report_date(cur_date, keep_current=True):
     cur_date_ = cur_date
     if isinstance(cur_date, pd.Timestamp):
         cur_date_ = cur_date.strftime('%Y-%m-%d')
@@ -325,6 +329,8 @@ def get_pre_report_date(cur_date):
     month_day = cur_date_[4:10]
     date_element = ['-03-31', '-06-30', '-09-30', '-12-31']
     if month_day in date_element:
+        if keep_current:
+            return cur_date # 当前正好是report_date的返回。
         index = date_element.index(month_day)
         pre_index = index-1 if index >=0 else 3
         year = str(int(year)-1) if pre_index==3 else year

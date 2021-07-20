@@ -174,31 +174,22 @@ def add_industry(stocks_df, hy_source='swhy', inplace=True):
 
     
 def add_report_inds(data_df, inds_names=['totalCapital']):
-    data_sorted = data_df.sort_index(level=0)
-    codes = data_sorted.index.get_level_values(1).unique().tolist()
-    date_ = data_sorted.index.get_level_values(0)
+    codes = data_df.index.get_level_values(1).unique().tolist()
+    date_ = data_df.index.get_level_values(0)
     date_start = get_pre_report_date(date_.min())
     date_end = get_next_report_date(date_.max())
     report_df = QA.QA_fetch_financial_report_adv(codes, date_start,date_end,ltype='EN').data[inds_names]
-    report_df = report_df.sort_index(level=0)
-    
-    report_starts = report_df.index.get_level_values(0)
-    report_ends = list(map(lambda x: pd.Timestamp(get_next_report_date(x))- pd.Timedelta(days=1), [str(i)[0:10] for i in report_starts]))
-    report_df = report_df.assign(start=report_starts,end=report_ends) 
 
-
-    data_sorted[inds_names]= np.nan
-    l = len(inds_names)
-    def setx(x):
-        code = x.name[1]
-        if l > 1:
-            data_sorted.loc[(slice(x['start'],x['end']), code), inds_names] = x[inds_names].values
-        else:
-            data_sorted.loc[(slice(x['start'],x['end']), code), inds_names] = x[inds_names[0]]
-            
-    report_df.apply(setx,axis=1)
     
-    return data_sorted
+    data_df['report_date'] = data_df.apply(lambda x:pd.Timestamp(get_pre_report_date(x.name[0])) ,axis=1)
+    data_re =  data_df.reset_index().set_index(['report_date','code'])
+    
+    data_merge = pd.merge(data_re,report_df, left_index=True, right_index=True, how='inner')
+    
+    data_merge_re = data_merge.reset_index().set_index(['date','code'])
+    del data_merge_re['report_date']
+    
+    return data_merge_re
 
 ########### block #################
 def get_all_blocks(hy_source='swhy'):

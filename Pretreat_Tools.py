@@ -3,6 +3,7 @@ import pandas as pd
 from scipy.optimize import minimize
 import scipy.stats as st
 import statsmodels.api as sm
+import Sample_Tools as smpl
 
 from sklearn import linear_model
 
@@ -11,7 +12,7 @@ def neutralize(factor:pd.Series, data, categorical:list=None, logarithmetics:lis
         :param categorical：{list} --指明需要被dummy的列
         :param logarithmetics：{list}  --指明要对对数化的列
         注：被categorical的column的value必须是字符串。
-        注：一般来说，顺序是 去极值->中心化->标准化
+        注：一般来说，顺序是 去极值->中性化->标准化
         注：单截面操作
     '''    
     X = data.copy()
@@ -28,6 +29,26 @@ def neutralize(factor:pd.Series, data, categorical:list=None, logarithmetics:lis
     neutralize_factor = factor - model.predict(X)
 
     return neutralize_factor
+
+def get_marketcapitalisation_industry_neutralized(ind:pd.DataFrame):
+    '''市值，行业-中性化：
+        :param ind：{pd.DataFrame} --需要中性化的指标
+    '''  
+    ind_ = ind
+    if not isinstance(ind,pd.DataFrame):
+        ind_ = pd.DataFrame(ind)
+        
+    ind_reported = smpl.add_report_inds(ind_)
+    ind_prepared = smpl.add_industry(ind_reported)
+    
+    ind_prepared = ind_prepared.dropna(axis=0)
+    ind_prepared = ind_prepared.drop(ind_prepared[ind_prepared['totalCapital']==0].index)
+    x = ind_prepared[['totalCapital','industry']]
+    y = ind_prepared.iloc[:,0]
+
+    ind_neutralized = neutralize(y, x, categorical=['industry'], logarithmetics=['totalCapital'])
+    return ind_neutralized
+
 
 # def winsorize_by_quantile_multidates(obj, floor=0.025, upper=0.975, column=None, drop=True):
 # 去除全局极端值，分日期处理没意义

@@ -1,0 +1,85 @@
+SET CL=-FI"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include\stdint.h"
+
+wget http://npm.taobao.org/mirrors/python/3.8.8/Python-3.8.8.tgz
+tar -xzf Python-3.8.8.tgz
+yum install libffi-devel -y
+
+
+/root/tmp/p3
+./configure --prefix=/root/tmp/p3
+
+
+ln -s /root/tmp/p3/bin/pip3 /usr/bin/pip3
+ln -s /root/tmp/p3/bin/python3 /usr/bin/python3
+
+ln -s /root/tmp/p3/bin/dask-scheduler /usr/bin/dask-scheduler
+ln -s /root/tmp/p3/bin/dask-worker /usr/bin/dask-worker
+
+
+
+pip3 install dask[complete]==2021.4.0
+pip3 install distributed==2021.4.0
+pip3 install jupyter-server-proxy
+pip3 install click==7.1.2
+pip3 install numpy==1.20.1
+pip3 install pandas==1.2.4
+
+
+
+systemctl enable dac.service
+systemctl start dac.service
+systemctl disable dac.service
+systemctl status dac.service -l
+systemctl restart dac.service
+
+[Unit]
+Description=networkOptimizeService2
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=10
+ExecStart=/root/tmp/p3/dac.sh
+ExecStop=/bin/kill -s TERM $MAINPID
+WorkingDirectory=/opt
+
+[Install]
+WantedBy=multi-user.target
+
+
+#!/bin/bash
+
+https://docs.dask.org/en/latest/setup/cli.html?highlight=dask-worker%20#command-line
+
+===========================================================
+
+redis      **6.*.*.* 5673  Ad****        redis://:root1@**6.*.*.*:5673/
+rbmq-dash  **6.*.*.* 15672 root/root1   amqp://test:test@**6.*.*.*:5672
+frps       **6.*.*.* bind_port = 7011 dashboard_port = 7010 vhost_http_port = 7080  vhost_https_port = 7083
+           dashboard_user = dri**  dashboard_pwd = y.d**.c*  token = dri**
+frpc       server_addr = httpsce**.d**.c*
+dask       1*6.*.*.* dask-scheduler --port 7353 --dashboard-address 7354 --tls-ca-file /root/tmp/p3/da-cert.pem --tls-cert /root/tmp/p3/da-cert.pem --tls-key /root/tmp/p3/da-key.pem
+dworker-li dask-worker tls://1*1.*.*.*:7353 --name 47 --worker-port 7360:7460 --nprocs 1 --nthreads 1 --memory-limit "1500 M" --no-dashboard --tls-ca-file /root/tmp/p3/da-cert.pem --tls-cert /root/tmp/p3/da-cert.pem --tls-key /root/tmp/p3/da-key.pem --interface vpn_local
+dask-worker tls://1*6.*.*.*:7353 --name gg --worker-port 7360:7460 --nprocs 2 --nthreads 1 --memory-limit "1500 M" --no-dashboard --tls-ca-file da-cert.pem --tls-cert da-cert.pem --tls-key da-key.pem --interface "VPN3 - VPN Client"
+
+
+qalab.httpsc****.dr**.c*:7080/lab
+
+
+===========================================================
+./vpnclient start
+./vpncmd
+NicCreate
+AccountCreate
+AccountPasswordSet
+radius
+AccountConnect
+
+AccountConnect之后可能需要重启dhclient，否则不一定能生效
+dhclient vpn_local -d 去掉-d后则常驻后台
+
+
+
+====================speed limit=========================
+iptables -A INPUT -p tcp --dport 9000:12000 -m limit --limit 50/sec -j ACCEPT
+iptables -A INPUT -p tcp --dport 9000:12000 -j DROP

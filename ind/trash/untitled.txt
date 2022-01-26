@@ -1,0 +1,10 @@
+AROON阿隆
+HT_TRENDLINE希尔伯特瞬时变换
+HT_DCPERIOD 希尔伯特主导周期
+HT_DCPHASE  希尔伯特主导循环阶段
+inphase, quadrature = HT_PHASOR 希尔伯特变换相量分量
+HT_TRENDMODE希尔伯特变换-趋势与周期模式
+
+talib.CDLDOJI(dataframe.open, dataframe.high, dataframe.low, dataframe.close) 十字星，目测有点用
+https://www.cnblogs.com/forest128/p/13823649.html
+ 

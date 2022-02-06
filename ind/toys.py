@@ -510,7 +510,7 @@ def alpha55(high, low, close, volume):
                              6).replace([-np.inf, np.inf], 0).fillna(value=0)
     return alpha
 
-
+#cap 市值
 def alpha56(returns, cap):
     alpha = 0 - \
         (1 * (rank((sma(returns, 10) / sma(sma(returns, 2), 3))) * rank((returns * cap))))

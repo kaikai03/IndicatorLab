@@ -169,7 +169,9 @@ def get_current_return(stocks_df,column,stride=1):
     :param stride: {int} --计算收益的跨度
     注意：当期回报有可能也包含未来信息。
     '''
-    return stocks_df[column].groupby(level=1, group_keys=False).apply(lambda x:(x/x.shift(stride)-1))
+    ret = stocks_df[column].groupby(level=1, group_keys=False).apply(lambda x:(x/x.shift(stride)-1))
+    ret.name = 'ret'
+    return ret
 
 def get_rank(data, codes=None,quantile=False, column=None):
     '''get_rank(a,['000001','000002'],column=['totalAssets','ROE'])'''

@@ -73,7 +73,20 @@ class FactorTest():
         self.ind_ret_df = None
         self.ind_binned = None
         
-
+    def process_ind(self,ind,ret,simple=False):
+        if not simple:
+            self.rank_ic = af.get_rank_ic(ind[self.main_field], ret_forward)
+            self.res = pd.DataFrame([af.get_ic_desc(self.rank_ic)], columns=['rankIC','rankIC_std','rankIC_T','rankIC_P'])
+            self.res['ICIR']=round(af.get_ic_ir(self.rank_ic),6)
+            self.res['winning']=round(af.get_winning_rate(self.rank_ic),6)
+        
+        common_index = ind.index.get_level_values(0).unique().intersection(ret_forward.index.get_level_values(0).unique())
+        ind_resample = ind.loc[common_index]
+        self.ind_ret_df = pd.concat([ind_resample, ret_forward], axis=1)
+        self.ind_ret_df.dropna(axis=0,inplace=True)
+        # 分箱
+        self.ind_binned = self.ind_ret_df.groupby(level=0, group_keys=False).apply(lambda x: pretreat.binning(x, deal_column=self.main_field,box_count=10, inplace=True))
+    
     def process(self):
         data = smpl.get_sample_by_zs(name=self.sample, start=self.start, end=self.end, gap=self.gap, only_main=self.only_main)
         

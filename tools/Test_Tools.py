@@ -51,13 +51,17 @@ def FactorTest_deal(codes,self_obj):
 
 
 class FactorTest():
-    def __init__(self,ind_Model_Class, sample='上证50',freq="m",start=None,end=None,gap=2500,only_main=True,neutralize={'enable':False,'static_mv':False},target_field=None):
-        assert ((not start is None) or (not end is None)), 'start 和 end 必须有一个'
-        assert isinstance(ind_Model_Class,type(Ind_Model_Base.Ind_Model)),"ind_Model_Class必须是Ind_Model的子类"
+    def __init__(self,ind_Model_Class=None, sample='上证50',freq="m",start=None,end=None,gap=2500,only_main=True,neutralize={'enable':False,'static_mv':False},target_field=None):
         assert freq !='w' ,"freq 禁止直接写w，自动resample week经常会选在周末而导致计算ic没有交集"
         
+        if not ind_Model_Class is None:
+            # 为了process_ind()做简单测试，暂时让ind_Model_Class可以空。
+            assert isinstance(ind_Model_Class,type(Ind_Model_Base.Ind_Model)),"ind_Model_Class必须是Ind_Model的子类"
+            assert ((not start is None) or (not end is None)), 'start 和 end 必须有一个'
+
+        
         self.ind_Model_Class = ind_Model_Class
-        if target_field is None:
+        if (target_field is None) and (not ind_Model_Class is None):
             self.main_field = ind_Model_Class.optimum_param['main']
         else:
             self.main_field = target_field
@@ -75,14 +79,14 @@ class FactorTest():
         
     def process_ind(self,ind,ret,simple=False):
         if not simple:
-            self.rank_ic = af.get_rank_ic(ind[self.main_field], ret_forward)
+            self.rank_ic = af.get_rank_ic(ind[self.main_field], ret)
             self.res = pd.DataFrame([af.get_ic_desc(self.rank_ic)], columns=['rankIC','rankIC_std','rankIC_T','rankIC_P'])
             self.res['ICIR']=round(af.get_ic_ir(self.rank_ic),6)
             self.res['winning']=round(af.get_winning_rate(self.rank_ic),6)
         
-        common_index = ind.index.get_level_values(0).unique().intersection(ret_forward.index.get_level_values(0).unique())
+        common_index = ind.index.get_level_values(0).unique().intersection(ret.index.get_level_values(0).unique())
         ind_resample = ind.loc[common_index]
-        self.ind_ret_df = pd.concat([ind_resample, ret_forward], axis=1)
+        self.ind_ret_df = pd.concat([ind_resample, ret], axis=1)
         self.ind_ret_df.dropna(axis=0,inplace=True)
         # 分箱
         self.ind_binned = self.ind_ret_df.groupby(level=0, group_keys=False).apply(lambda x: pretreat.binning(x, deal_column=self.main_field,box_count=10, inplace=True))

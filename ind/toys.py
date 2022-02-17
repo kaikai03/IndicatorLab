@@ -11,6 +11,16 @@ from datetime import datetime
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 
+
+import sys
+import os 
+module_path = os.path.abspath(os.path.join('..')) 
+if module_path not in sys.path: 
+    sys.path.append(module_path)
+
+from base.JuUnits import excute_for_multidates
+
+
 # 中性(行业中性)
 def neu_industry(stock_data,sector_series):
     """
@@ -47,8 +57,6 @@ def IndNeutralize(vwap, ind):
     return vwap
 
 # 移动求和
-
-
 def ts_sum(df, window):
     return df.rolling(window).sum()
 

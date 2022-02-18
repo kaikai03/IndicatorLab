@@ -18,7 +18,7 @@ module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path: 
     sys.path.append(module_path)
 
-from base.JuUnits import excute_for_multidates
+# from base.JuUnits import excute_for_multidates
 
 
 # 中性(行业中性)
@@ -773,16 +773,18 @@ def alpha101(close, Open, high, low):
     return alpha
 
 
-def alpha48(close, ind):
-    r1 = (correlation(delta(close, 1), delta(delay(close, 1), 1), 250)
-          * delta(close, 1)) / close
+def alpha48(close_ind, close_ind, ind):
+    r1 = (correlation(delta(close_ind, 1), delta(delay(close_ind, 1), 1), 250)
+          * delta(close_ind, 1)) / close
     r2 = ts_sum((pow((delta(close, 1) / delay(close, 1)), 2)), 250)
-    alpha = IndNeutralize(r1, ind) / r2
+    # alpha = IndNeutralize(r1, ind) / r2
+    alpha = r1 / r2
     return alpha
 
 
-def alpha58(vwap, volume, ind):
-    x = IndNeutralize(vwap, ind)
+def alpha58(vwap_ind, volume, ind):
+    vwap = vwap_ind
+    # x = IndNeutralize(vwap, ind)
     alpha = -1 * ts_rank(decay_linear(correlation(x, volume, 4), 8), 6)
     return alpha
 

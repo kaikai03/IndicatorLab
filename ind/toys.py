@@ -814,9 +814,10 @@ def alpha67(volume, vwap_ind, adv20_ind, high, ind):
     return alpha
 
 
-def alpha69(volume, vwap, ind, close):
+def alpha69(volume, vwap, vwap_ind, ind, close):
     adv20 = sma(volume, 20)
-    r1 = rank(ts_max(delta(IndNeutralize(vwap, ind), 3), 5))
+    # r1 = rank(ts_max(delta(IndNeutralize(vwap, ind), 3), 5))
+    r1 = rank(ts_max(delta(vwap_ind, 3), 5))
     r2 = ts_rank(correlation(
         ((close * 0.490655) + (vwap * (1 - 0.490655))), adv20, 5), 9)
     alpha = pow(r1, r2) * -1
@@ -871,12 +872,14 @@ def alpha82(Open, volume, volume_ind, ind):
     return -1 * alpha
 
 
-def alpha87(volume, close, vwap, ind):
-    adv81 = sma(volume, 81).fillna(value=0)
+def alpha87(volume, close, vwap, adv81_ind, ind):
+    # adv81 = sma(volume, 81).fillna(value=0)
     r1 = rank(decay_linear(
         delta(((close * 0.369701) + (vwap * (1 - 0.369701))), 2), 3))
+    # r2 = ts_rank(decay_linear(
+    #     abs(correlation(IndNeutralize(adv81, ind), close, 13)), 5), 14)
     r2 = ts_rank(decay_linear(
-        abs(correlation(IndNeutralize(adv81, ind), close, 13)), 5), 14)
+        abs(correlation(adv81_ind, close, 13)), 5), 14)
     alpha = r1
     alpha[r1 < r2] = r2
     return -1 * alpha
@@ -932,14 +935,13 @@ def alpha97(volume, low, lv_mixed_ind, vwap, ind):
 
 
 def alpha100(volume_ind, close_ind, low_ind, high_ind, ind):
-    adv20 = sma(volume, 20)
+    adv20 = sma(volume_ind, 20)
     # r1 = IndNeutralize(rank(((((close - low) - (high - close)) / (high - low)) * volume)), ind)
     # r2 = 1.5 * scale(IndNeutralize(r1, ind))
     # r3 = scale(IndNeutralize((correlation(close, rank(adv20), 5) - rank(ts_argmin(close, 30))), ind))
-    r1 = (rank(((((close - low) - (high - close)) / (high - low)) * volume)), ind)
-    r2 = 1.5 * scale(IndNeutralize(r1, ind))
-    r3 = scale(IndNeutralize((correlation(close, rank(adv20), 5) - rank(ts_argmin(close, 30))), ind))
-    
-    
+    r1 = rank(((((close_ind - low_ind) - (high_ind - close_ind)) / (high_ind - low_ind)) * volume_ind))
+    r2 = 1.5 * scale(r1)
+    r3 = scale((correlation(close_ind, rank(adv20), 5) - rank(ts_argmin(close_ind, 30))))
+
     alpha = -1 * (r2 - r3) * (volume / adv20)
     return alpha

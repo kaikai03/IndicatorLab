@@ -773,7 +773,7 @@ def alpha101(close, Open, high, low):
     return alpha
 
 
-def alpha48(close_ind, close_ind, ind):
+def alpha48(close_ind, close, ind):
     r1 = (correlation(delta(close_ind, 1), delta(delay(close_ind, 1), 1), 250)
           * delta(close_ind, 1)) / close
     r2 = ts_sum((pow((delta(close, 1) / delay(close, 1)), 2)), 250)
@@ -789,24 +789,27 @@ def alpha58(vwap_ind, volume, ind):
     return alpha
 
 
-def alpha59(vwap, volume, ind):
-    x = IndNeutralize(((vwap * 0.728317) + (vwap * (1 - 0.728317))), ind)
+def alpha59(vwap_ind, volume, ind):
+    x = vwap_ind
+    # x = IndNeutralize(((vwap * 0.728317) + (vwap * (1 - 0.728317))), ind)
     alpha = -1 * ts_rank(decay_linear(correlation(x, volume, 4), 16), 8)
     return alpha
 
 
-def alpha63(volume, close, vwap, Open, ind):
+def alpha63(volume, close_ind, vwap, Open, ind):
     adv180 = sma(volume, 180).fillna(value=0)
-    r1 = rank(decay_linear(delta(IndNeutralize(close, ind), 2), 8))
+    # r1 = rank(decay_linear(delta(IndNeutralize(close, ind), 2), 8))
+    r1 = rank(decay_linear(delta(close_ind, 2), 8))
     r2 = rank(decay_linear(correlation(
         ((vwap * 0.318108) + (Open * (1 - 0.318108))), ts_sum(adv180, 37), 14), 12))
     alpha = -1 * (r1 - r2)
     return alpha
 
 
-def alpha67(volume, vwap, high, ind):
-    adv20 = sma(volume, 20)
-    r = rank(correlation(IndNeutralize(vwap, ind), IndNeutralize(adv20, ind), 6))
+def alpha67(volume, vwap_ind, adv20_ind, high, ind):
+    # adv20 = sma(volume, 20)
+    # r = rank(correlation(IndNeutralize(vwap, ind), IndNeutralize(adv20, ind), 6))
+    r = rank(correlation(vwap_ind, adv20_ind, 6))
     alpha = pow(rank(high - ts_min(high, 2)), r) * -1
     return alpha
 
@@ -820,45 +823,49 @@ def alpha69(volume, vwap, ind, close):
     return alpha
 
 
-def alpha70(volume, close, ind, vwap):
+def alpha70(volume, close_ind, ind, vwap):
     adv50 = sma(volume, 50).fillna(value=0)
-    r = ts_rank(correlation(IndNeutralize(close, ind), adv50, 18), 18)
+    # r = ts_rank(correlation(IndNeutralize(close, ind), adv50, 18), 18)
+    r = ts_rank(correlation(close_ind, adv50, 18), 18)
+    
     alpha = pow(rank(delta(vwap, 1)), r) * -1
     return alpha
 
 
-def alpha76(volume, vwap, low, ind):
+def alpha76(volume, vwap, low_ind, ind):
     adv81 = sma(volume, 81).fillna(value=0)
     r1 = rank(decay_linear(delta(vwap, 1), 12))
-    r2 = ts_rank(decay_linear(
-        ts_rank(correlation(IndNeutralize(low, ind), adv81, 8), 20), 17), 19)
+    # r2 = ts_rank(decay_linear(ts_rank(correlation(IndNeutralize(low, ind), adv81, 8), 20), 17), 19)
+    r2 = ts_rank(decay_linear(ts_rank(correlation(low_ind, adv81, 8), 20), 17), 19)
     alpha = r1
     alpha[r1 < r2] = r2
     return alpha
 
 
-def alpha79(volume, close, Open, ind, vwap):
+def alpha79(volume, close, Open, co_mixed_ind, ind, vwap):
     adv150 = sma(volume, 150).fillna(value=0)
-    r1 = rank(
-        delta(IndNeutralize(((close * 0.60733) + (Open * (1 - 0.60733))), ind), 1))
+    # r1 = rank(delta(IndNeutralize(((close * 0.60733) + (Open * (1 - 0.60733))), ind), 1))
+    r1 = rank(delta(co_mixed_ind , 1))
     r2 = rank(correlation(ts_rank(vwap, 4), ts_rank(adv150, 9), 15))
     alpha = (r1 < r2) * -1
     return alpha
 
 
-def alpha80(Open, high, volume, ind):
+def alpha80(Open, high, volume, oh_mixed_ind, ind):
     adv10 = sma(volume, 10)
-    r1 = rank(np.sign(
-        delta(IndNeutralize(((Open * 0.868128) + (high * (1 - 0.868128))), ind), 4)))
+    # r1 = rank(np.sign(delta(IndNeutralize(((Open * 0.868128) + (high * (1 - 0.868128))), ind), 4)))
+    r1 = rank(np.sign(delta(oh_mixed_ind, 4)))
     r2 = ts_rank(correlation(high, adv10, 5), 6)
     alpha = pow(r1, r2) * -1
     return alpha
 
 
-def alpha82(Open, volume, ind):
+def alpha82(Open, volume, volume_ind, ind):
     r1 = rank(decay_linear(delta(Open, 1), 15))
-    r2 = ts_rank(decay_linear(correlation(IndNeutralize(volume, ind),
-                                          ((Open * 0.634196) + (Open * (1 - 0.634196))), 17), 7), 13)
+    # r2 = ts_rank(decay_linear(correlation(IndNeutralize(volume, ind),
+    #                                       ((Open * 0.634196) + (Open * (1 - 0.634196))), 17), 7), 13)
+    r2 = ts_rank(decay_linear(correlation(volume_ind,
+                                      ((Open * 0.634196) + (Open * (1 - 0.634196))), 17), 7), 13)
     alpha = r1
     alpha[r1 > r2] = r2
     return -1 * alpha
@@ -875,60 +882,64 @@ def alpha87(volume, close, vwap, ind):
     return -1 * alpha
 
 
-def alpha89(low, vwap, ind, volume):
+def alpha89(low, vwap, vwap_ind, ind, volume):
     adv10 = sma(volume, 10)
     r1 = ts_rank(decay_linear(correlation(
         ((low * 0.967285) + (low * (1 - 0.967285))), adv10, 7), 6), 4)
-    r2 = ts_rank(decay_linear(delta(IndNeutralize(vwap, ind), 3), 10), 15)
+    # r2 = ts_rank(decay_linear(delta(IndNeutralize(vwap, ind), 3), 10), 15)
+    r2 = ts_rank(decay_linear(delta(vwap_ind, 3), 10), 15)
     alpha = r1 - r2
     return alpha
 
 
-def alpha90(volume, close, ind, low):
-    adv40 = sma(volume, 40).fillna(value=0)
+def alpha90(volume, close, adv40_ind, ind, low):
+    # adv40 = sma(volume, 40).fillna(value=0)
     r1 = rank((close - ts_max(close, 5)))
-    r2 = ts_rank(correlation(IndNeutralize(adv40, ind), low, 5), 3)
+    r2 = ts_rank(correlation(adv40_ind, low, 5), 3)
     alpha = pow(r1, r2) * -1
     return alpha
 
 
-def alpha91(close, ind, volume, vwap):
+def alpha91(close, close_ind, ind, volume, vwap):
     adv30 = sma(volume, 30)
+    # r1 = ts_rank(decay_linear(decay_linear(correlation(
+    #     IndNeutralize(close, ind), volume, 10), 16), 4), 5)
     r1 = ts_rank(decay_linear(decay_linear(correlation(
-        IndNeutralize(close, ind), volume, 10), 16), 4), 5)
+        close_ind, volume, 10), 16), 4), 5)
     r2 = rank(decay_linear(correlation(vwap, adv30, 4), 3))
     alpha = (r1 - r2) * -1
     return alpha
 
 
-def alpha93(vwap, ind, volume, close):
+def alpha93(vwap, vwap_ind, ind, volume, close):
     adv81 = sma(volume, 81).fillna(value=0)
     r1 = ts_rank(decay_linear(correlation(
-        IndNeutralize(vwap, ind), adv81, 17), 20), 8)
+        vwap_ind, adv81, 17), 20), 8)
     r2 = rank(decay_linear(
         delta(((close * 0.524434) + (vwap * (1 - 0.524434))), 3), 16))
     alpha = r1 / r2
     return alpha
 
 
-def alpha97(volume, low, vwap, ind):
+def alpha97(volume, low, lv_mixed_ind, vwap, ind):
     adv60 = sma(volume, 60).fillna(value=0)
-    r1 = rank(decay_linear(delta(IndNeutralize(
-        ((low * 0.721001) + (vwap * (1 - 0.721001))), ind), 3), 20))
+    # r1 = rank(decay_linear(delta(IndNeutralize(((low * 0.721001) + (vwap * (1 - 0.721001))), ind), 3), 20))
+    r1 = rank(decay_linear(delta(lv_mixed_ind, 3), 20))
     r2 = ts_rank(decay_linear(
         ts_rank(correlation(ts_rank(low, 8), ts_rank(adv60, 17), 5), 19), 16), 7)
     alpha = (r1 - r2) * -1
     return alpha
 
 
-def alpha100(volume, close, low, high, ind):
+def alpha100(volume_ind, close_ind, low_ind, high_ind, ind):
     adv20 = sma(volume, 20)
-    r1 = IndNeutralize(
-        rank(((((close - low) - (high - close)) / (high - low)) * volume))
-        , ind)
+    # r1 = IndNeutralize(rank(((((close - low) - (high - close)) / (high - low)) * volume)), ind)
+    # r2 = 1.5 * scale(IndNeutralize(r1, ind))
+    # r3 = scale(IndNeutralize((correlation(close, rank(adv20), 5) - rank(ts_argmin(close, 30))), ind))
+    r1 = (rank(((((close - low) - (high - close)) / (high - low)) * volume)), ind)
     r2 = 1.5 * scale(IndNeutralize(r1, ind))
-    r3 = scale(IndNeutralize(
-        (correlation(close, rank(adv20), 5) - rank(ts_argmin(close, 30)))
-        , ind))
+    r3 = scale(IndNeutralize((correlation(close, rank(adv20), 5) - rank(ts_argmin(close, 30))), ind))
+    
+    
     alpha = -1 * (r2 - r3) * (volume / adv20)
     return alpha

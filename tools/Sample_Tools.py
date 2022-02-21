@@ -120,12 +120,12 @@ def get_stock_name(code):
 
     
 ########### samples #################
-def get_codes_by_zs(name='沪深300', only_main=True):
-    codes_list = get_codes_by_market(codes_list=get_blocks_view('zs')[name], sse='all',only_main=only_main)
+def get_codes_by_zs(name='沪深300', only_main=True,filter_st=True):
+    codes_list = get_codes_by_market(codes_list=get_blocks_view('zs')[name], sse='all',only_main=only_main,filter_st=filter_st)
     return codes_list
 
-def get_sample_by_zs(name='沪深300', start=None, end=None, gap=60, freq=QA.FREQUENCE.DAY, only_main=True):
-    codes_list = get_codes_by_zs(name, only_main=only_main)
+def get_sample_by_zs(name='沪深300', start=None, end=None, gap=60, freq=QA.FREQUENCE.DAY, only_main=True, filter_st=True):
+    codes_list = get_codes_by_zs(name, only_main=only_main,filter_st=True)
     data = get_data(codes_list, start=start, end=end, gap=gap, freq=freq, market=MARKET_TYPE.STOCK_CN)
     return data
 
@@ -277,13 +277,13 @@ def get_blockname_from_stock(code, hy_source='swhy', collections=DATABASE.stock_
         return None
     return res[res['type']==hy_source]['blockname']
 
-def get_codes_from_blockname(blockname, sse='all', only_main=True, collections=DATABASE.stock_block):
+def get_codes_from_blockname(blockname, sse='all', only_main=True, filter_st=True, collections=DATABASE.stock_block):
     codes = QA.QA_fetch_stock_block_adv(blockname=blockname, collections=collections).code
     if sse != 'all' and len(codes)!=0:
-        codes = get_codes_by_market(sse=sse, only_main=only_main, codes_list=codes)
+        codes = get_codes_by_market(sse=sse, only_main=only_main, codes_list=codes,filter_st=filter_st)
     return codes
 
-def get_codes_by_market(codes_list=None, sse='sh',only_main=True):
+def get_codes_by_market(codes_list=None, sse='sh',only_main=True,filter_st=True):
     '''按照市场获取股票代码，分为3类sh，sz，all，默认只获取主板；
        :param codes_list: --为空时，从全市场codes中获得整个子市场的codes;
                             不为空时，则过滤codes_list的内容;
@@ -311,6 +311,8 @@ def get_codes_by_market(codes_list=None, sse='sh',only_main=True):
     assert len(condition), '参数错误，检查sse内容'
     if codes_list is None:
         stocks = QA.QA_fetch_stock_list()
+        if filter_st:
+            stocks[~stocks.name.str.startswith('ST')]
         return stocks[stocks.code.map(lambda x:x[0:2] in condition)].code.unique().tolist()
     else:
         return [code for code in codes_list if code[0:2] in condition]

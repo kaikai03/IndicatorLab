@@ -783,7 +783,7 @@ def alpha48(close_ind, close, ind):
 
 
 def alpha58(vwap_ind, volume, ind):
-    vwap = vwap_ind
+    x = vwap_ind
     # x = IndNeutralize(vwap, ind)
     alpha = -1 * ts_rank(decay_linear(correlation(x, volume, 4), 8), 6)
     return alpha
@@ -943,5 +943,5 @@ def alpha100(volume_ind, close_ind, low_ind, high_ind, ind):
     r2 = 1.5 * scale(r1)
     r3 = scale((correlation(close_ind, rank(adv20), 5) - rank(ts_argmin(close_ind, 30))))
 
-    alpha = -1 * (r2 - r3) * (volume / adv20)
+    alpha = -1 * (r2 - r3) * (volume_ind / adv20)
     return alpha

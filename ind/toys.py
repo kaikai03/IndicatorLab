@@ -945,3 +945,17 @@ def alpha100(volume_ind, close_ind, low_ind, high_ind, ind):
 
     alpha = -1 * (r2 - r3) * (volume_ind / adv20)
     return alpha
+
+########################################################################
+
+def alpha1a(volume_ind, close_ind, low_ind, high_ind, ind):
+    adv20 = sma(volume_ind, 20)
+    # r1 = IndNeutralize(rank(((((close - low) - (high - close)) / (high - low)) * volume)), ind)
+    # r2 = 1.5 * scale(IndNeutralize(r1, ind))
+    # r3 = scale(IndNeutralize((correlation(close, rank(adv20), 5) - rank(ts_argmin(close, 30))), ind))
+    r1 = rank(((((close_ind - low_ind) - (high_ind - close_ind)) / (high_ind - low_ind)) * volume_ind))
+    r2 = 1.5 * scale(r1)
+    r3 = scale((correlation(close_ind, rank(adv20), 5) - rank(ts_argmin(close_ind, 30))))
+
+    alpha = -1 * (r2 - r3) * (volume_ind / adv20)
+    return alpha

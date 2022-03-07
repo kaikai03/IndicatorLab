@@ -30,7 +30,7 @@ def save_cache(name, data):
     
 def load_cache(cache_name:str, to_series:bool=False):
     assert is_cache_exist(cache_name),'cache not exist, create first'
-    df = pd.read_feather(file_path(cache_name)).set_index(['date','code'])
+    df = pd.read_feather(file_path(cache_name)).set_index(['date','code']).sort_index(level=0)
     if to_series:
         df =  df.squeeze()
     return df
@@ -41,7 +41,7 @@ def load_cache_adv(cache_name:str, start:str, end:str, to_series:bool=False, fla
     st = pd.Timestamp(start) 
     en = pd.Timestamp(end) 
 
-    df = pd.read_feather(file_path(cache_name)).set_index([flag_time,'code'])[st:en]
+    df = pd.read_feather(file_path(cache_name)).set_index([flag_time,'code']).sort_index(level=0)[st:en]
     date_idx = df.index.get_level_values(0).unique()
     if not (st >= date_idx.min() and en <= date_idx.max()):
         info = '"{}"：date range out of cache[{},{}]'.format(
@@ -70,7 +70,7 @@ def load_caches_adv(cache_names:list, start:str=None, end:str=None, flag_time:st
             df = load_cache_adv(name,start,end,flag_time=flag_time)
         tmp.append(df)  
         
-    return pd.concat(tmp,axis=1)
+    return pd.concat(tmp,axis=1).sort_index()
      
     
         

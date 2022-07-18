@@ -33,7 +33,7 @@ def neutralize(factor:pd.Series, data, categorical:list=None, logarithmetics:lis
         X[logarithmetics] = X[logarithmetics].agg('log')
     # 哑变量
     if not categorical is None:
-        X = pd.get_dummies(X,categorical)
+        X = pd.get_dummies(X,columns=categorical)
         
 #     print(X)
         

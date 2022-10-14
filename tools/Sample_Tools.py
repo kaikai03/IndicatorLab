@@ -78,7 +78,7 @@ def get_index_data(code, start=None, end=None, gap=60, freq=QA.FREQUENCE.DAY):
     '''
     assert ((not start is None) or (not end is None)), 'start 和 end 必须有一个'
     if start is None:
-        start_ = QA_util_get_next_trade_date(end, gap*-1)  # trade_date_sse[trade_date_sse.index(end) - gap]
+        start_ = QA_util_get_next_trade_date(end, gap*-1)(end, gap*-1)  # trade_date_sse[trade_date_sse.index(end) - gap]
     else:
         start_ = start
     if end is None:
@@ -279,8 +279,8 @@ def get_blockname_from_stock(code, hy_source='swhy', collections=DATABASE.stock_
 
 def get_codes_from_blockname(blockname, sse='all', only_main=True, filter_st=True, collections=DATABASE.stock_block):
     codes = QA.QA_fetch_stock_block_adv(blockname=blockname, collections=collections).code
-    if sse != 'all' and len(codes)!=0:
-        codes = get_codes_by_market(sse=sse, only_main=only_main, codes_list=codes,filter_st=filter_st)
+    if len(codes)!=0:
+        codes = get_codes_by_market(codes_list=codes, sse=sse, only_main=only_main,filter_st=filter_st)
     return codes
 
 def get_codes_by_market(codes_list=None, sse='sh',only_main=True,filter_st=True):
@@ -290,7 +290,7 @@ def get_codes_by_market(codes_list=None, sse='sh',only_main=True,filter_st=True)
                           (default: None)
        :param sse:{str in ['all', 'sh', 'sz']} --市场名称
        :param only_main:{bool} --是否主板，True时，过滤创业板内容。(default: True)
-      
+       :param filter_st:{bool} --是否过滤ST，仅在codes_list为空的时候生效。(default: True)
     '''
     condition = []
     if sse =='all':
@@ -309,13 +309,17 @@ def get_codes_by_market(codes_list=None, sse='sh',only_main=True,filter_st=True)
             condition.append('30')
             
     assert len(condition), '参数错误，检查sse内容'
+    
+    stocks = QA.QA_fetch_stock_list()
     if codes_list is None:
-        stocks = QA.QA_fetch_stock_list()
         if filter_st:
-            stocks[~stocks.name.str.startswith('ST')]
+            stocks = stocks[~stocks.name.str.startswith('ST')]
         return stocks[stocks.code.map(lambda x:x[0:2] in condition)].code.unique().tolist()
     else:
-        return [code for code in codes_list if code[0:2] in condition]
+        stocks = stocks[stocks.index.isin(codes_list)]
+        if filter_st:
+            stocks = stocks[~stocks.name.str.startswith('ST')]
+        return stocks[stocks.code.map(lambda x:x[0:2] in condition)].code.unique().tolist()
 
     
     

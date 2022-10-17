@@ -21,13 +21,14 @@ __file_type__ = '.feather'
 class CACHE_TYPE(Enum):
     default = ''
     STOCK = '/stock/'
-    FATOR = '/fator/'
+    FACTOR = '/factor/'
     TMP = '/tmp/'
     
 # df = smpl.get_sample_by_zs(name='沪深300', end='2021-11-28', gap=2500,  only_main=True, filter_st=True).data
 # df.to_parquet(__cache_dir__+'test.parquet')
 
 def file_path(file_name, cache_type=CACHE_TYPE.default):
+    # print(__cache_dir__ + cache_type.value + file_name + __file_type__)
     return __cache_dir__ + cache_type.value + file_name + __file_type__
 
 def is_cache_exist(cache_name, cache_type=CACHE_TYPE.default):
@@ -37,8 +38,8 @@ def save_cache(name, data, cache_type=CACHE_TYPE.default):
     data.reset_index().to_feather(file_path(name,cache_type=cache_type))
     
 def load_cache(cache_name:str, to_series:bool=False, time_flag:str='date',cache_type=CACHE_TYPE.default):
-    assert is_cache_exist(cache_name,cache_type),'cache not exist, create first'
-    df = pd.read_feather(file_path(cache_name, cache_type)).set_index([time_flag,'code']).sort_index(level=0)
+    assert is_cache_exist(cache_name,cache_type=cache_type),'cache not exist, create first'
+    df = pd.read_feather(file_path(cache_name, cache_type=cache_type)).set_index([time_flag,'code']).sort_index(level=0)
     if to_series:
         df =  df.squeeze()
     return df
@@ -49,7 +50,7 @@ def load_cache_adv(cache_name:str, start:str, end:str, to_series:bool=False, tim
     st = pd.Timestamp(start) 
     en = pd.Timestamp(end) 
 
-    df = pd.read_feather(file_path(cache_name, cache_type)).set_index([time_flag,'code']).sort_index(level=0)
+    df = pd.read_feather(file_path(cache_name, cache_type=cache_type)).set_index([time_flag,'code']).sort_index(level=0)
     dt_index = df.index.get_level_values(0)
     date_range = dt_index.unique()
     if not (st >= date_range.min() and en <= date_range.max()):

@@ -12,6 +12,10 @@ import scipy.stats as st
 import statsmodels.api as sm
 import tools.Sample_Tools as smpl
 
+# import cpuinfo
+# if 'ntel' in cpuinfo.get_cpu_info()['brand_raw']:
+# from sklearnex import patch_sklearn, unpatch_sklearn
+# unpatch_sklearn() ##注意，少量数据的线性回归没有优势。慎用，存在内存泄露
 
 from sklearn import linear_model
 

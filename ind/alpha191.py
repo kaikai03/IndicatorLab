@@ -7,21 +7,18 @@ from sklearn import linear_model
 
 def STD(data, windows):
     return data.rolling(window=windows, min_periods=windows).std()
-
 def MEAN(data, windows):
     return data.rolling(window=windows, min_periods=windows).mean()
-
 def DELTA(data, windows):
     return data.diff(4)
-
 def SEQUENCE(n):
-    return np.arange(1,n+1)
+    return pd.Series(np.arange(1,n+1))
 
 def SMA(data,windows,alpha):
     return data.ewm(adjust=False, alpha=float(alpha)/windows, min_periods=windows, ignore_na=False).mean()
 
 def REGBETA(xs, y, n):
-    assert len(y)>=n,  'len(y)!>=n !!!'
+    assert len(y)>=n,  'len(y)!>=n !!!'+ str(y.index[0])
     regress = linear_model.LinearRegression(fit_intercept=False)
     def reg(X,Y):
         try:
@@ -39,6 +36,7 @@ def REGBETA(xs, y, n):
             return np.nan
         return res
     return xs.rolling(window=n, min_periods=n).apply(lambda x:reg(x,y))
+
 
 def COVIANCE(A,B,d):
     se = pd.Series(np.arange(len(A.index)),index=A.index)
@@ -219,8 +217,8 @@ def alpha020(data, dependencies=['close'], max_window=7):
 def alpha021(data, max_window=10):
     # REGBETA(MEAN(CLOSE,6),SEQUENCE(6))
     a = MEAN(data['close'], 6)
-    a = REGBETA(a,list(SEQUENCE(6)),6)
-    if a.isnan():
+    a = REGBETA(a,SEQUENCE(6),6)
+    if a is np.nan:
         return pd.Series(np.nan,index=data.index)
     return a
 
@@ -1028,7 +1026,7 @@ def alpha115(data, dependencies=['high', 'low', 'volume', 'close'], max_window=4
     
 def alpha116(data, dependencies=['close'], max_window=20):
     # REGBETA(CLOSE,SEQUENCE,20)
-    alpha = REGBETA(data['close'],list(range(1,21)),20)
+    alpha = REGBETA(data['close'],pd.Series(range(1,21)),20)
     return alpha
 
 def alpha117(data, dependencies=['volume', 'close', 'high', 'low'], max_window=32):
@@ -1281,7 +1279,7 @@ def alpha146(data, dependencies=['close'], max_window=121):
 def alpha147(data, dependencies=['close'], max_window=24):
     # REGBETA(MEAN(CLOSE,12),SEQUENCE(12))
     ma_price = data['close'].rolling(window=12, min_periods=12).mean()
-    alpha = REGBETA(ma_price,list(range(1,13)),12)
+    alpha = REGBETA(ma_price,pd.Series(range(1,13)),12)
     return alpha
 
 def alpha148(data, dependencies=['Open', 'volume'], max_window=75):
@@ -1588,7 +1586,7 @@ def alpha187(data, dependencies=['Open', 'high'], max_window=21):
     # SUM(OPEN<=DELAY(OPEN,1)?0:MAX(HIGH-OPEN,OPEN-DELAY(OPEN,1)),20)
     part1 = np.maximum(data['high']-data['Open'], data['Open'].diff(1))
     part1[data['Open'].diff(1)<=0] = 0.0
-    return part1.rolling(window=20, min_periods=20).sum().iloc[-1]
+    return part1.rolling(window=20, min_periods=20).sum()
 
 def alpha188(data, dependencies=['low', 'high'], max_window=11):
     # ((HIGH-LOW\u2013SMA(HIGH-LOW,11,2))/SMA(HIGH-LOW,11,2))*100

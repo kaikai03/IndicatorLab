@@ -48,6 +48,9 @@ def CORR(A,B,d):
     se = se.rolling(5).apply(lambda x: A.iloc[x].corr(B.iloc[x]))
     return se
 
+def excute_for_multidates(data, func, level=0, **pramas):
+    return data.groupby(level=level, group_keys=False).apply(func,**pramas)
+
 
 def alpha001(data, dependencies=['close','Open','volume'], max_window=6):
     # (-1*CORR(RANK(DELTA(LOG(VOLUME),1)),RANK(((CLOSE-OPEN)/OPEN)),6)
@@ -292,45 +295,64 @@ def alpha029(data, dependencies=['close', 'volume'], max_window=7):
     # 获利成交量
     return (data['close'].pct_change(periods=6)*data['volume'])
 
-def alpha030(data, dependencies=['close', 'PB', 'MktValue'], max_window=81):
-    return None
-    ## 不是单票的，以后再说
+def alpha030(data, dependencies=['close', 'pb', 'cap'], max_window=81):
     # WMA((REGRESI(RET,MKT,SMB,HML,60))^2,20)
     # 即特质性收益
     # MKT 为市值加权的市场平均收益率，
     # SMB 为市值最小的30%的股票的平均收益减去市值最大的30%的股票的平均收益，
-    # HML 为PB最高的30%的股票的平均收益减去PB最低的30%的股票的平均收益    ret = data['close'].pct_change(periods=1).fillna(0.0)
-    mkt_ret = (ret * data['cap']).sum(axis=1) / data['cap'].sum(axis=1)
-    me30 = (data['cap'].T <= data['cap'].quantile(0.3, axis=1)).T
-    me70 = (data['cap'].T >= data['cap'].quantile(0.7, axis=1)).T
-    pb30 = (data['pb'].T <= data['pb'].quantile(0.3, axis=1)).T
-    pb70 = (data['pb'].T >= data['pb'].quantile(0.7, axis=1)).T
-    smb_ret = ret[me30].mean(axis=1, skipna=True) - ret[me70].mean(axis=1, skipna=True)
-    hml_ret = ret[pb70].mean(axis=1, skipna=True) - ret[pb30].mean(axis=1, skipna=True)
-    xs = pd.concat([mkt_ret, smb_ret, hml_ret], axis=1)
-    idxs = pd.Series(data=range(len(data['close'].index)), index=data['close'].index)
+    # HML 为pb最高的30%的股票的平均收益减去pb最低的30%的股票的平均收益    ret = data['close'].pct_change(periods=1).fillna(0.0)
+    if not 'code' in data.index.names:
+        print('alpha030 needs stocks more than one')
+        return None
+    elif len(data.index.get_level_values('code').unique())<=1:
+        print('alpha030 needs stocks more than one')
 
-    def multi_var_linregress(idx, y, xs):
-        X = xs.iloc[idx]
-        Y = y.iloc[idx]
-        X = sm.add_constant(X)
+    def make_factors(d):
+        ret = d['returns']
+        mkt_ret = (ret * d['cap']).sum() / d['cap'].sum()
+        me30 = (d['cap'] <= d['cap'].quantile(0.3))
+        me70 = (d['cap'] >= d['cap'].quantile(0.7))
+        pb30 = (d['pb'] <= d['pb'].quantile(0.3))
+        pb70 = (d['pb'] >= d['pb'].quantile(0.7))
+        smb_ret = ret[me30].mean(skipna=True) - ret[me70].mean(skipna=True)
+        hml_ret = ret[pb70].mean(skipna=True) - ret[pb30].mean(skipna=True)
+        xs = pd.DataFrame(np.tile([mkt_ret, smb_ret, hml_ret], (len(d.index),1)), index=d.index, columns=['mkt_ret', 'smb_ret', 'hml_ret'])
+        return pd.concat([xs,ret],axis=1)
+
+    factors = excute_for_multidates(data, lambda x: make_factors(x),level=0)
+
+    fa_ = factors.dropna()
+    date_index = fa_.index.get_level_values(0).unique()
+    regressor = linear_model.LinearRegression(fit_intercept=True)
+    def reg(x, y):
         try:
-            res = np.array(sm.OLS(Y, X).fit().resid)
+            resid = y-regressor.fit(x,y).predict(x)
         except Exception as e:
-            return pd.Series(np.nan,index=data.index)
-        return res[-1]
+            print(e)
+            return [np.nan]*len(y)
+        return resid.reshape(-1)
+    results_tmp = []
+    window=60
+    for day in range(window,len(date_index)+1):
+        date_range = date_index[day-window:day]
+        factor_slice = factors.loc[date_range]
+        xs = factor_slice[['mkt_ret','smb_ret','hml_ret']].values
+        y = factor_slice['returns'].values.reshape(-1,1)
+        res = pd.Series(reg(xs,y),index=factor_slice.index)
+        res = res.loc[[factor_slice.index.get_level_values(0)[-1]]]
+        results_tmp.append(res)
 
-    # print(xs.tail(5), ret.tail(5))
-    residual = [idxs.rolling(window=60, min_periods=60).apply(lambda x: multi_var_linregress(x, ret[col], xs)) for col in ret.columns]
-    residual = pd.concat(residual, axis=1)
-    residual.columns = ret.columns
-
-    # w = preprocessing.normalize(np.array([i for i in range(1, 21)]), norm='l1', axis=1).reshape(-1)
+    residual = pd.Series(np.nan,index=factors.index)
+    residual[fa_.index]=pd.concat(results_tmp,axis=0)
+    
     # w = preprocessing.normalize(np.array([i for i in range(1, 21)]).reshape(-1, 1), norm='l1', axis=0).reshape(-1)
     w = np.array(range(1, 21))
     w = w/w.sum()
-    alpha = (residual ** 2).rolling(window=20, min_periods=20).apply(lambda x: np.dot(x, w))
-    return alpha.iloc[-1]
+    
+    residual = residual ** 2
+    final = excute_for_multidates(residual, lambda x: x.rolling(window=20, min_periods=20).apply(lambda x: np.dot(x, w)),level=1)
+
+    return final
 
 def alpha031(data, dependencies=['close'], max_window=12):
     # (CLOSE-MEAN(CLOSE,12))/MEAN(CLOSE,12)*100
@@ -1572,15 +1594,39 @@ def alpha185(data, dependencies=['close', 'Open'], max_window=1):
     # RANK(-1*(1-OPEN/CLOSE)^2)
     return ((1.0-data['Open']/data['close']) ** 2) * (-1)
 
-def alpha186(data, dependencies=['ADXR'], max_window=1):
-    return None
-    # \u5c31\u662fADXR
-#     (MEAN(ABS(SUM((LD>0  &  LD>HD)?LD:0,14)*100/SUM(TR,14)-SUM((HD>0  &
-# HD>LD)?HD:0,14)*100/SUM(TR,14))/(SUM((LD>0  &  LD>HD)?LD:0,14)*100/SUM(TR,14)+SUM((HD>0  &
-# HD>LD)?HD:0,14)*100/SUM(TR,14))*100,6)+DELAY(MEAN(ABS(SUM((LD>0  &
-# LD>HD)?LD:0,14)*100/SUM(TR,14)-SUM((HD>0  &  HD>LD)?HD:0,14)*100/SUM(TR,14))/(SUM((LD>0  &
-# LD>HD)?LD:0,14)*100/SUM(TR,14)+SUM((HD>0 & HD>LD)?HD:0,14)*100/SUM(TR,14))*100,6),6))/2
-    return data['ADXR'].iloc[-1]
+def alpha186(data, dependencies=['low','high','close'], max_window=20):
+    # 就是ADXR
+#     (MEAN(ABS(SUM((LD>0 & LD>HD)?LD:0,14)*100/SUM(TR,14) - SUM((HD>0 & HD>LD)?HD:0,14)*100/SUM(TR,14)) 
+#     /
+#     (SUM((LD>0  &  LD>HD)?LD:0,14)*100/SUM(TR,14) + SUM((HD>0 & HD>LD)?HD:0,14)*100/SUM(TR,14))*100,6)
+#     +
+#     DELAY(MEAN(ABS(SUM((LD>0 & LD>HD)?LD:0,14)*100/SUM(TR,14) - SUM((HD>0 & HD>LD)?HD:0,14)*100/SUM(TR,14)) 
+#            / (SUM((LD>0 & LD>HD)?LD:0,14)*100/SUM(TR,14) + SUM((HD>0 & HD>LD)?HD:0,14)*100/SUM(TR,14))*100,6)
+#          ,6))/2
+    dm_plus = data['close'].diff(1).fillna(0)
+    dm_subtract = data['low'].diff(1).fillna(0)
+    condition_plus = (dm_plus<dm_subtract) | (dm_plus<0)
+    condition_sub = (dm_subtract < dm_plus) | (dm_subtract<0)
+    dm_plus[condition_plus] = 0
+    dm_subtract[condition_sub] = 0
+    
+    close_delay = data['close'].shift(1)
+    tr_a = data['high'] - data['low']
+    tr_b = data['high'] - close_delay
+    tr_c = data['low'] - close_delay
+    tr = pd.concat([tr_a,tr_b,tr_c],axis=1).max(axis=1)
+    
+    tr_sum = tr.rolling(14).sum()
+    
+    PDI = dm_plus.rolling(14).sum() * 100 / tr_sum
+    MDI = dm_subtract.rolling(14).sum() * 100 / tr_sum
+    DX = np.abs(PDI-MDI)/(PDI+MDI) * 100
+    ADX = MEAN(DX,6)
+    ADXR =(ADX+ADX.shift(1))/2
+    
+    return ADXR
+
+
 
 def alpha187(data, dependencies=['Open', 'high'], max_window=21):
     # SUM(OPEN<=DELAY(OPEN,1)?0:MAX(HIGH-OPEN,OPEN-DELAY(OPEN,1)),20)

@@ -196,7 +196,8 @@ def alpha017(data, dependencies=['close', 'volume', 'amount'], max_window=16):
     vwap = data['vwap']
     delta_price = data['close'].diff(5)
     alpha = (vwap-vwap.rolling(window=15,min_periods=15).max()).rank(axis=0, pct=True) ** delta_price
-    return alpha
+    ## 长期数据时，结果有可能会非常大，加个对数抑制一下
+    return np.log(alpha)
 
 def alpha018(data, dependencies=['close'], max_window=6):
     # CLOSE/DELAY(CLOSE,5)
@@ -331,11 +332,12 @@ def alpha030(data, dependencies=['close', 'pb', 'cap'], max_window=81):
             print(e)
             return [np.nan]*len(y)
         return resid.reshape(-1)
+    
     results_tmp = []
     window=60
     for day in range(window,len(date_index)+1):
         date_range = date_index[day-window:day]
-        factor_slice = factors.loc[date_range]
+        factor_slice = fa_.loc[date_range]
         xs = factor_slice[['mkt_ret','smb_ret','hml_ret']].values
         y = factor_slice['returns'].values.reshape(-1,1)
         res = pd.Series(reg(xs,y),index=factor_slice.index)
@@ -343,7 +345,8 @@ def alpha030(data, dependencies=['close', 'pb', 'cap'], max_window=81):
         results_tmp.append(res)
 
     residual = pd.Series(np.nan,index=factors.index)
-    residual[fa_.index]=pd.concat(results_tmp,axis=0)
+    temp = pd.concat(results_tmp,axis=0)
+    residual[temp.index]=temp
     
     # w = preprocessing.normalize(np.array([i for i in range(1, 21)]).reshape(-1, 1), norm='l1', axis=0).reshape(-1)
     w = np.array(range(1, 21))

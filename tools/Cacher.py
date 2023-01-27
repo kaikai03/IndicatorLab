@@ -22,6 +22,7 @@ class CACHE_TYPE(Enum):
     default = ''
     STOCK = '/stock/'
     FACTOR = '/factor/'
+    MARKET = '/market/'
     TMP = '/tmp/'
     
 # df = smpl.get_sample_by_zs(name='沪深300', end='2021-11-28', gap=2500,  only_main=True, filter_st=True).data
@@ -38,14 +39,19 @@ def save_cache(name, data, cache_type=CACHE_TYPE.default):
     data.reset_index().to_feather(file_path(name,cache_type=cache_type))
     
 def load_cache(cache_name:str, to_series:bool=False, time_flag:str='date',cache_type=CACHE_TYPE.default):
-    assert is_cache_exist(cache_name,cache_type=cache_type),'cache not exist, create first'
+    if not is_cache_exist(cache_name,cache_type=cache_type):
+        warnings.warn('{} cache not exist, create first'.format(cache_name)) 
+        return None
+        
     df = pd.read_feather(file_path(cache_name, cache_type=cache_type)).set_index([time_flag,'code']).sort_index(level=0)
     if to_series:
         df =  df.squeeze()
     return df
 
 def load_cache_adv(cache_name:str, start:str, end:str, to_series:bool=False, time_flag:str='date',cache_type=CACHE_TYPE.default):
-    assert is_cache_exist(cache_name, cache_type=cache_type),'cache not exist, create first'
+    if not is_cache_exist(cache_name,cache_type=cache_type):
+        warnings.warn('{} cache not exist, create first'.format(cache_name)) 
+        return None
         
     st = pd.Timestamp(start) 
     en = pd.Timestamp(end) 
@@ -73,15 +79,15 @@ def load_caches_adv(cache_names:list, start:str=None, end:str=None, time_flag:st
         assert not end is None, 'start and end must not be None at the same time,or be None at the same time'
     assert isinstance(cache_names,list), 'cache_names MUST be list'
     
-    tmp = []
+    tmp = None
     for name in cache_names:
         if start is None:
             df = load_cache(name,cache_type=cache_type)
         else:
             df = load_cache_adv(name,start,end,time_flag=time_flag,cache_type=cache_type)
-        tmp.append(df)  
+        tmp = pd.concat([tmp,df],axis=1) 
         
-    return pd.concat(tmp,axis=1).sort_index()
+    return tmp.sort_index()
      
     
         

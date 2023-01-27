@@ -655,7 +655,7 @@ def alpha062(data, dependencies=['volume', 'high'], max_window=5):
 def alpha063(data, dependencies=['close'], max_window=7):
     # SMA(MAX(CLOSE-DELAY(CLOSE,1),0),6,1)/SMA(ABS(CLOSE-DELAY(CLOSE,1)),6,1)*100
     part1 = (np.maximum(data['close'].diff(1), 0.0)).ewm(adjust=False, alpha=float(1)/6, min_periods=0, ignore_na=False).mean()
-    part2 = abs(data['close']).diff(1).ewm(adjust=False, alpha=float(1)/6, min_periods=0, ignore_na=False).mean()
+    part2 = abs(data['close'].diff(1)).ewm(adjust=False, alpha=float(1)/6, min_periods=0, ignore_na=False).mean()
     return part1/part2*100.0
     
 def alpha064(data, dependencies=['close', 'amount', 'volume'], max_window=93):
@@ -1562,10 +1562,12 @@ def alpha180(data, dependencies=['volume', 'close'], max_window=68):
 
 def alpha181(data, dependencies=['close', 'bm_index_close'], max_window=40):
     # SUM(RET-MEAN(RET,20)-(BANCHMARK_INDEX_CLOSE-MEAN(BANCHMARK_INDEX_CLOSE,20))^2,20)/SUM((BANCHMARK_INDEX_CLOSE-MEAN(BANCHMARK_INDEX_CLOSE,20))^3)
-    bm = data['bm_index_close']
+    # 优化：数值取对数，否则ret 跟 index 可能不在一个量级上，导致全部结果趋同。
+    bm = np.log(data['bm_index_close'])
     bm_mean = bm - bm.rolling(window=20, min_periods=20).mean()
+    # print(bm_mean)
     # bm_mean = pd.DataFrame(data=np.repeat(bm_mean.values.reshape(len(bm_mean.values),1), len(data['close'].columns), axis=1), index=data['close'].index, columns=data['close'].columns)
-    ret = data['close'].pct_change(periods=1)
+    ret = np.log(data['close']).pct_change(periods=1)
     part1 = (ret-ret.rolling(window=20,min_periods=20).mean()-bm_mean**2).rolling(window=20,min_periods=20).sum()
     part2 = (bm_mean ** 3).rolling(window=20,min_periods=20).sum()
     return part1 / part2

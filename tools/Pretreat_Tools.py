@@ -41,7 +41,7 @@ def neutralize(factor:pd.Series, data, categorical:list=None, logarithmetics:lis
         
 #     print(X)
         
-    model = linear_model.LinearRegression().fit(X, factor)
+    model = linear_model.LinearRegression(fit_intercept=False).fit(X, factor)
     neutralize_factor = factor - model.predict(X)
 
     return neutralize_factor

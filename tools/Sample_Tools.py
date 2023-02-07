@@ -209,21 +209,16 @@ def add_report_inds(data_df, inds_names=['totalCapital']):
     date_end = get_next_report_date(date_.max())
     report_df = QA.QA_fetch_financial_report_adv(codes, date_start,date_end,ltype='EN').data[inds_names]
 
+    data_ = pd.concat([data_df,report_df], axis=1)
+    data_[inds_names] = excute_for_multidates(data_[inds_names],lambda x:x.fillna(method='ffill'),level='code')
     
-    data_df['report_date'] = data_df.apply(lambda x:pd.Timestamp(get_pre_report_date(x.name[0])) ,axis=1)
-    data_re =  data_df.reset_index().set_index(['report_date','code'])
-    
-    data_merge = pd.merge(data_re,report_df, left_index=True, right_index=True, how='inner')
-    
-    data_merge_re = data_merge.reset_index().set_index(['date','code'])
-    del data_merge_re['report_date']
-    
-    return data_merge_re
+    return data_.loc[data_df.index]
 
 def add_marketvalue_industry(df:pd.DataFrame, static_mv:bool=False):
     '''市值，行业-中性化：
         :param df：{pd.DataFrame} --需要中性化的指标
         :param static_mv：{bool} --是否使用静态市值，静态市值取自财报， 动态市值通过复权信息和收盘价进行计算。
+            静态市值时，DataFrame中必须含有close
         注意：动态市值区分总股本和流动股本。totalCapital 和 liquidity_totalCapital
     '''  
     df_ = df
@@ -233,14 +228,16 @@ def add_marketvalue_industry(df:pd.DataFrame, static_mv:bool=False):
     # 静态市值取自财报， 动态市值通过复权信息和收盘价进行计算。
     if static_mv:
         df_reported = add_report_inds(df_, inds_names=['totalCapital'])
+        df_reported['totalCapital'] = df_reported['totalCapital']*df_reported['close']
+        df_reported.rename(columns=lambda x:x.replace('totalCapital','market_value'), inplace=True)
     else:
         df_reported = QA_data_marketvalue(df_)
-        df_reported.rename(columns=lambda x:x.replace('mv','totalCapital'), inplace=True)
+        df_reported.rename(columns=lambda x:x.replace('mv','market_value'), inplace=True)
         
     add_industry(df_reported)
     
     df_reported.dropna(axis=0,inplace=True)
-    df_reported.drop(df_reported[df_reported['totalCapital']==0].index,inplace=True)
+    df_reported.drop(df_reported[df_reported['market_value']==0].index,inplace=True)
 
     return df_reported
 

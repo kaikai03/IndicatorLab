@@ -48,10 +48,6 @@ def neutralize(factor:pd.Series, data, categorical:list=None, logarithmetics:lis
 
     
 
-# def winsorize_by_quantile_multidates(obj, floor=0.025, upper=0.975, column=None, drop=True):
-# 去除全局极端值，分日期处理没意义
-#     return excute_for_multidates(obj, winsorize_by_quantile, floor=floor,upper=upper, column=column, drop=drop).sort_index()
-
 def winsorize_by_quantile(obj, floor=0.025, upper=0.975, column=None, drop=True):
     """
        根据分位上下限选取数据
@@ -78,6 +74,46 @@ def winsorize_by_quantile(obj, floor=0.025, upper=0.975, column=None, drop=True)
         else:
             obj.loc[obj[column] < qt[floor], column] = qt[floor]
             obj.loc[obj[column] > qt[upper], column] = qt[upper]
+            return obj
+    raise TypeError('obj must be series or dataframe')
+    
+def winsorize_by_mad(obj, n=3, column=None, drop=True):
+    """
+       根据中位数偏离倍数选取数据
+       :param obj:{pd.DataFrame | pd.Series} 
+       :param n:{pd.DataFrame | pd.Series} --偏离倍数
+       :param column:{str} --当obj为DataFrame时，用来指明处理的列。
+       :param drop:{bool} --分位外的数据处理方式，
+                            True：删除整（行）条数据；
+                            False：用临界值替换范围外的值
+    """
+    
+    if isinstance(obj, pd.Series):
+        median = np.median(obj.dropna())
+        mad = np.median((obj.dropna() - median).abs())
+        #样本标准差的估计量(σ≈1.483)
+        mad_e = 1.483*mad
+        upper = median + n*mad_e
+        floor = median - n*mad_e
+        if drop:
+            return obj[(obj>=floor) & (obj<=upper) | obj.isna()]
+        else:
+            obj[obj < floor] = floor
+            obj[obj > upper] = upper
+            return obj
+    
+    if isinstance(obj, pd.DataFrame):
+        assert column, 'COLUMN CANT be NONE when obj is dataframe'
+        median = np.median(obj[column].dropna())
+        mad = np.median((obj.dropna() - median).abs())
+        mad_e = 1.483*mad
+        upper = median + n*mad_e
+        floor = median - n*mad_e
+        if drop:
+            return obj[(obj[column]>=floor) & (obj[column]<=upper) | obj[column].isna()]
+        else:
+            obj.loc[obj[column] < floor, column] = floor
+            obj.loc[obj[column] > upper, column] = upper
             return obj
     
     raise TypeError('obj must be series or dataframe')

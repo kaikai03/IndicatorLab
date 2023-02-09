@@ -56,7 +56,7 @@ def prepare_data(stock_df,ret_fs):
 
     # 超额回报
     ret_t_excess = ret_t.groupby(pd.Grouper(level='date', freq='1M')).apply(
-            lambda x:(x-ret_fs_daily.get(x.index[0][0].strftime('%Y-%m'),default=ret_fs_daily[-1])))
+            lambda x:(x-ret_fs.get(x.index[0][0].strftime('%Y-%m'),default=ret_fs[-1])))
 
     # 市值
     market_value_t = stock_df['market_value']
@@ -66,6 +66,7 @@ def prepare_data(stock_df,ret_fs):
                                          lambda ret: cal_ret_market(market_value_t.loc[ret.index[0][0]],ret), 
                                          level=0)
     
+    return ret_t, ret_t_excess, market_value_t, ret_excess_market_t
 
 def camp_beta_alpha(ret_excess,ret_excess_market):
     '''beta和alpha因子
@@ -125,14 +126,15 @@ def momentum(ret,ret_fs):
         return ewma.rolling(11).mean().shift(11)
 
     mom = excute_for_multidates(ret_excess.dropna(), lambda x:calc_(x), level='code')
-          
+    mom.name = 'momentum'
     return mom
 
-def size(stock_data):
+def sizelg(stock_data):
     '''市值因子
         :param stock_data：{pd.DataFrame} --需要包含market_value
     '''
     mv = np.log(stock_data['market_value'])
+    mv.name = 'sizelg'
     return mv
 
 def bp(stock_data):
@@ -141,35 +143,9 @@ def bp(stock_data):
     '''
     data = smpl.add_report_inds(stock_data[['close']],'netAssetsPerShare')
     bp = data['close']/data['netAssetsPerShare']
+    bp.name = 'bp'
     return bp
 
-def liquidity(data_df):
-    '''流动性因子
-        :param data_df：{pd.DataFrame} --需要包含流动市值liquidity_market_value、close和market_value
-        --LIQUIDTY = 0.35*STOM + 0.35*STOQ + 0.30*STOA 
-        --STOM: 月均换手率：ST(1)
-        --STOQ ：三个月的平均月换手率：ST(3)
-        --STOA ：十二个月的平均月换手率：ST(12)
-    '''
-    liquidity_capital = data_df['liquidity_market_value']/data_df['close']
-    turn_over = data_df['volume']*100 / liquidity_capital
-    turn_over_month_sum = excute_for_multidates(turn_over, lambda x:x.rolling(21).sum(),level='code')
-    STOM = np.log(turn_over_month_sum)
-    STOQ = np.log(excute_for_multidates(turn_over_month_sum, lambda x:x.rolling(21*3).mean(),level='code'))
-    STOA = np.log(excute_for_multidates(turn_over_month_sum, lambda x:x.rolling(21*3*4).mean(),level='code'))
-    LIQUIDTY = 0.35*STOM + 0.35*STOQ + 0.30*STOA 
-    
-    market_value = data_df['market_value']
-    Y = LIQUIDTY.dropna()
-    size = np.log(market_value.loc[Y.index])
-    X = size.values.reshape(-1, 1)
-    
-    model = linear_model.LinearRegression(fit_intercept=True)    
-    resualt = model.fit(X, Y.values.reshape(-1, 1))
-    predict = resualt.predict(X)
-    residual = Y - predict.reshape(1, -1)[0]
-    LIQUIDTY[~LIQUIDTY.isna()]= residual
-    return LIQUIDTY.sort_index()
 
 def earnings_yield(ret,market_value,stock_industry):
     '''Earnings Yield 收益因子
@@ -238,9 +214,38 @@ def earnings_yield(ret,market_value,stock_industry):
     #     display(pd.concat([ret_industry,ret_expect,x],axis=1))
 
     EARNYILD = 0.68*EPIBS + 0.11*ETOP + 0.21*CETOP
-    
+    EARNYILD.name = 'earnings_yield'
     return EARNYILD
 
+
+def liquidity(data_df):
+    '''流动性因子
+        :param data_df：{pd.DataFrame} --需要包含流动市值liquidity_market_value、close和market_value
+        --LIQUIDTY = 0.35*STOM + 0.35*STOQ + 0.30*STOA 
+        --STOM: 月均换手率：ST(1)
+        --STOQ ：三个月的平均月换手率：ST(3)
+        --STOA ：十二个月的平均月换手率：ST(12)
+    '''
+    liquidity_capital = data_df['liquidity_market_value']/data_df['close']
+    turn_over = data_df['volume']*100 / liquidity_capital
+    turn_over_month_sum = excute_for_multidates(turn_over, lambda x:x.rolling(21).sum(),level='code')
+    STOM = np.log(turn_over_month_sum)
+    STOQ = np.log(excute_for_multidates(turn_over_month_sum, lambda x:x.rolling(21*3).mean(),level='code'))
+    STOA = np.log(excute_for_multidates(turn_over_month_sum, lambda x:x.rolling(21*3*4).mean(),level='code'))
+    LIQUIDTY = 0.35*STOM + 0.35*STOQ + 0.30*STOA 
+    
+    market_value = data_df['market_value']
+    Y = LIQUIDTY.dropna()
+    size = np.log(market_value.loc[Y.index])
+    X = size.values.reshape(-1, 1)
+    
+    model = linear_model.LinearRegression(fit_intercept=True)    
+    resualt = model.fit(X, Y.values.reshape(-1, 1))
+    predict = resualt.predict(X)
+    residual = Y - predict.reshape(1, -1)[0]
+    LIQUIDTY[~LIQUIDTY.isna()]= residual
+    LIQUIDTY.name = 'liquidity'
+    return LIQUIDTY.sort_index()
 
 def resvol(ret, ret_fs, ret_excess, size_log, beta, beta_residual):
     '''Residual Volatility 波动因子
@@ -296,7 +301,7 @@ def resvol(ret, ret_fs, ret_excess, size_log, beta, beta_residual):
     predict = model.fit(X, Y.values.reshape(-1, 1)).predict(X)
     RESVOL_residual = Y - predict.reshape(1, -1)[0]
     RESVOL[~RESVOL.isna()]= RESVOL_residual
-
+    RESVOL.name = 'resvol'
     return RESVOL
 
 def sizenl(size_lg):
@@ -306,7 +311,8 @@ def sizenl(size_lg):
     --市值对数LNCAP的立方和LNCAP做线性回归后的残差，再经过缩尾处理(winsorized)和标准化处理(standardized)。
     --可代表"中市值因子"，相当于x^3用一条均线穿过去分为上下部分（残差正负，负的部分在中间）
     '''
-    size_nona= size_lg.dropna()
+    size_lg_ = size_lg.copy()
+    size_nona= size_lg_.dropna()
     size_3 = size_nona**3
     
     model = linear_model.LinearRegression(fit_intercept=True)
@@ -315,8 +321,9 @@ def sizenl(size_lg):
     
     predict = model.fit(X, Y).predict(X)
     SIZENL_residual = size_3 - np.squeeze(predict)
-    size_lg[~size_lg.isna()] = SIZENL_residual
+    size_lg_[~size_lg.isna()] = SIZENL_residual
     
-    size_lg = pretreat.winsorize_by_mad(size_lg, n=3, drop=False)
-    size_lg = pretreat.standardize(size_lg, multi_code=False)
-    return size_lg
+    sizenl = pretreat.winsorize_by_mad(size_lg_, n=3, drop=False)
+    sizenl = pretreat.standardize(sizenl, multi_code=False)
+    sizenl.name = 'sizenl'
+    return sizenl

@@ -396,7 +396,7 @@ def get_pre_report_date(cur_date, keep_current=True):
 ###############  other  #########################
 def optimize_data_type(data):
     columns = data.columns
-    roles = {'open':np.float32,'high':np.float32,'low':np.float32,'close':np.float32,'volume':np.int32,
+    roles = {'open':np.float32,'high':np.float32,'low':np.float32,'close':np.float32,
              'adj':np.float32}
     for key in roles.keys():
         if key in columns:

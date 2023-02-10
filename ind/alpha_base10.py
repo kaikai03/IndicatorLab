@@ -81,12 +81,13 @@ def camp_beta_alpha(ret_excess,ret_excess_market):
     half_life_ = list(map(lambda n:0.5**(n/half_life_window),range(1,window+1)))[::-1]
     half_life_weight = half_life_/np.sum(half_life_)
 
-    model = linear_model.LinearRegression(fit_intercept=True)
+    
     res_tmp = []
     def reg(ret_t_ex):
         # print()
         # assert False,None
         X = ret_excess_market[ret_t_ex.index.get_level_values(0)]
+        model = linear_model.LinearRegression(fit_intercept=True, n_jobs=1)
         res = model.fit(X.values.reshape(-1, 1),
                         ret_t_ex.values.reshape(-1, 1), 
                         sample_weight=half_life_weight)
@@ -148,7 +149,7 @@ def bp(stock_data):
 
 
 def earnings_yield(ret,market_value,stock_industry):
-    '''Earnings Yield 收益因子
+    '''Earnings Yield 收益因子   
         :param ret：{pd.Series} --回报率
         :param market_value：{pd.Series} --市值
         :param stock_industry：{pd.Series} --行业
@@ -188,10 +189,10 @@ def earnings_yield(ret,market_value,stock_industry):
 
 
     # # EPIBS 分析师的期望暂时用季度收益斜率+行业季度收益斜率来代表。
-    m = linear_model.LinearRegression(fit_intercept=True)
     def ret_cum_reg(ret,window=63):
         def reg(window_slice):
             ## ！X设置与同一量级
+            m = linear_model.LinearRegression(fit_intercept=True, n_jobs=1)
             res = m.fit(np.arange(0.01,0.01*window+0.01,0.01).reshape(-1, 1), 
                         window_slice.values.reshape(-1, 1)
                        )
@@ -219,12 +220,13 @@ def earnings_yield(ret,market_value,stock_industry):
 
 
 def liquidity(data_df):
-    '''流动性因子
+    '''流动性因子   
         :param data_df：{pd.DataFrame} --需要包含流动市值liquidity_market_value、close和market_value
         --LIQUIDTY = 0.35*STOM + 0.35*STOQ + 0.30*STOA 
         --STOM: 月均换手率：ST(1)
         --STOQ ：三个月的平均月换手率：ST(3)
         --STOA ：十二个月的平均月换手率：ST(12)
+        !!!!注意：需要全局回归，禁止使用分布计算
     '''
     liquidity_capital = data_df['liquidity_market_value']/data_df['close']
     turn_over = data_df['volume']*100 / liquidity_capital
@@ -239,7 +241,7 @@ def liquidity(data_df):
     size = np.log(market_value.loc[Y.index])
     X = size.values.reshape(-1, 1)
     
-    model = linear_model.LinearRegression(fit_intercept=True)    
+    model = linear_model.LinearRegression(fit_intercept=True, n_jobs=1)    
     resualt = model.fit(X, Y.values.reshape(-1, 1))
     predict = resualt.predict(X)
     residual = Y - predict.reshape(1, -1)[0]
@@ -260,6 +262,7 @@ def resvol(ret, ret_fs, ret_excess, size_log, beta, beta_residual):
         --CMRA：Cumulative range：累积收益范围。表示过去12个月的波动率幅度。每21天计算一个Z(T)。
         --HSIGMA：Hist sigma：历史sigma，在计算Beta所进行的时间序列回归中，取回归残差收益率的波动率。
         --最后RESVOL对beta做正交化
+        !!!!注意：需要全局回归，禁止使用分布计算
     '''
 
     window=252
@@ -290,7 +293,7 @@ def resvol(ret, ret_fs, ret_excess, size_log, beta, beta_residual):
     
     RESVOL = 0.74*DASTD + 0.16 *CMRA + 0.10*HSIGMA
     
-    model = linear_model.LinearRegression(fit_intercept=True)
+    model = linear_model.LinearRegression(fit_intercept=True, n_jobs=1)
     
     
     Y = RESVOL.dropna()
@@ -310,12 +313,13 @@ def sizenl(size_lg):
     :param ret_fs：{pd.Series} --无风险回报
     --市值对数LNCAP的立方和LNCAP做线性回归后的残差，再经过缩尾处理(winsorized)和标准化处理(standardized)。
     --可代表"中市值因子"，相当于x^3用一条均线穿过去分为上下部分（残差正负，负的部分在中间）
+    !!!!注意：需要全局回归，禁止使用分布计算
     '''
     size_lg_ = size_lg.copy()
     size_nona= size_lg_.dropna()
     size_3 = size_nona**3
     
-    model = linear_model.LinearRegression(fit_intercept=True)
+    model = linear_model.LinearRegression(fit_intercept=True, n_jobs=1)
     Y = size_3.values.reshape(-1, 1)
     X = size_nona.values.reshape(-1, 1)
     

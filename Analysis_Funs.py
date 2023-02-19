@@ -10,6 +10,19 @@ from sklearn import linear_model
 
 import numba as nb
 
+def VIF(df):
+    """方差膨胀法共线性校验：
+        :df：{pd.DataFrame}
+        :return：{pd.DataFrame} -- 各变量描述，VIF>10则共线可能
+    """
+    from statsmodels.stats.outliers_influence import variance_inflation_factor 
+    tmp_df = df.assign(const=1)
+    x = np.array(df)
+    vif_list = [variance_inflation_factor(x, i) for i in range(x.shape[1])]
+    df_vif = pd.DataFrame({'variable': list(tmp_df.columns), 'vif': vif_list})
+    df_vif = df_vif[~(df_vif['variable'] == 'const')]   # 删除常数项
+    return df_vif
+
 def get_LR_params_fast(x_array,y_array):
     """快速最小二乘：
         :param x_array：{list or np.array}
@@ -30,9 +43,10 @@ def get_LR_params_fast(x_array,y_array):
 def get_rank_ic(factor_standardized, ret_forward):
     """
        计算因子的信息系数
-        :param factor_standardized: {multiIndex[date,code]} --标准化后的因子值
-        :param ret_forward: {multiIndex[date,code]} --下一期的股票收益率
+        :param factor_standardized: {pd.Series:multiIndex[date,code]} --标准化后的因子值
+        :param ret_forward: {pd.Series:multiIndex[date,code]} --下一期的股票收益率
         :return {pd.Series}
+        !注意factor_standardized必须是pd.Series
     """
     
     assert len(factor_standardized.index.get_level_values(1).unique()) > 4, '股票数量必须大于4，否则没啥意义啊'

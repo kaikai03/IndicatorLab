@@ -158,6 +158,7 @@ def earnings_yield(ret,market_value,stock_industry):
         --EPIBS ：分析师预测的 EP （ earnings to price ）。
         --ETOP ： ttm-ep ，最近 12 个月的总盈利除以当前总市值。
         --CETOP ：最近 12 个月的运营现金流处于当前总市值。
+        !!!!注意：需要全局回归(行业期望)，禁止使用分布计算
     '''
     mv = market_value
     codes = mv.index.get_level_values(1).unique().tolist()
@@ -204,6 +205,7 @@ def earnings_yield(ret,market_value,stock_industry):
     ret_expect = excute_for_multidates(ret, lambda x:ret_cum_reg(x),level='code').sort_index()
 
     ret_industry = pd.concat([ret,stock_industry], axis=1).sort_index()
+    # 日内行业平均
     ret_industry_meam = ret_industry.reset_index().set_index(['date','industry']).groupby(level=[0,1]).mean()
     ret_industry_expect = excute_for_multidates(ret_industry_meam, lambda x:ret_cum_reg(x),level='industry')
 
@@ -236,18 +238,22 @@ def liquidity(data_df):
     STOA = np.log(excute_for_multidates(turn_over_month_sum, lambda x:x.rolling(21*3*4).mean(),level='code'))
     LIQUIDTY = 0.35*STOM + 0.35*STOQ + 0.30*STOA 
     
-    market_value = data_df['market_value']
-    Y = LIQUIDTY.dropna()
-    size = np.log(market_value.loc[Y.index])
-    X = size.values.reshape(-1, 1)
+    liqiodty_no_nan = LIQUIDTY.dropna()
+    size = np.log(data_df['market_value'].loc[liqiodty_no_nan.index])
     
-    model = linear_model.LinearRegression(fit_intercept=True, n_jobs=1)    
-    resualt = model.fit(X, Y.values.reshape(-1, 1))
-    predict = resualt.predict(X)
-    residual = Y - predict.reshape(1, -1)[0]
-    LIQUIDTY[~LIQUIDTY.isna()]= residual
+    def reg(y):
+        Y = y.dropna().values.reshape(-1, 1)
+        X = size.loc[y.index].values.reshape(-1, 1)
+        model = linear_model.LinearRegression(fit_intercept=True)    
+        resualt = model.fit(X, Y)
+        predict = resualt.predict(X)
+        residual = y - np.squeeze(predict)
+        return residual
+    
+    liquidity_residual = excute_for_multidates(liqiodty_no_nan, lambda y:reg(y),level='date')
+    LIQUIDTY[liquidity_residual.index] = liquidity_residual.values
     LIQUIDTY.name = 'liquidity'
-    return LIQUIDTY.sort_index()
+    return LIQUIDTY
 
 def resvol(ret, ret_fs, ret_excess, size_log, beta, beta_residual):
     '''Residual Volatility 波动因子
@@ -293,19 +299,31 @@ def resvol(ret, ret_fs, ret_excess, size_log, beta, beta_residual):
     
     RESVOL = 0.74*DASTD + 0.16 *CMRA + 0.10*HSIGMA
     
-    model = linear_model.LinearRegression(fit_intercept=True, n_jobs=1)
+    model = linear_model.LinearRegression(fit_intercept=True)
     
     
-    Y = RESVOL.dropna()
-    size_ = size_log.loc[Y.index].values.reshape(-1, 1)
-    beta_ = beta.loc[Y.index].values.reshape(-1, 1)
-    X = np.concatenate((beta_, size_),axis=1)
+    resvol_no_nan = RESVOL.dropna()
+    size_ = size_log.loc[resvol_no_nan.index]
+    beta_ = beta.loc[resvol_no_nan.index]    
     
-    predict = model.fit(X, Y.values.reshape(-1, 1)).predict(X)
-    RESVOL_residual = Y - predict.reshape(1, -1)[0]
-    RESVOL[~RESVOL.isna()]= RESVOL_residual
+    def reg(y_):
+        Y = y_.values.reshape(-1, 1)
+        x1 = size_.loc[y_.index].values.reshape(-1, 1)
+        x2 = beta_.loc[y_.index].values.reshape(-1, 1)
+        X = np.concatenate((x1, x2),axis=1)
+        
+        model = linear_model.LinearRegression(fit_intercept=True)    
+        resualt = model.fit(X, Y)
+        predict = resualt.predict(X)
+        residual = y_ - np.squeeze(predict)
+        return residual
+    
+    resvol_residual = excute_for_multidates(resvol_no_nan, lambda y:reg(y),level='date')
+    RESVOL[resvol_residual.index] = resvol_residual.values
     RESVOL.name = 'resvol'
+    
     return RESVOL
+
 
 def sizenl(size_lg):
     '''Non-Linear Size 非线性市值因子
@@ -317,17 +335,22 @@ def sizenl(size_lg):
     '''
     size_lg_ = size_lg.copy()
     size_nona= size_lg_.dropna()
-    size_3 = size_nona**3
     
-    model = linear_model.LinearRegression(fit_intercept=True, n_jobs=1)
-    Y = size_3.values.reshape(-1, 1)
-    X = size_nona.values.reshape(-1, 1)
+    def standardize(x):
+        x_3 = x**3
+        Y = x_3.values.reshape(-1, 1)
+        X = x.values.reshape(-1, 1)
+
+        model = linear_model.LinearRegression(fit_intercept=True)    
+        resualt = model.fit(X, Y)
+        predict = resualt.predict(X)
+        residual = x_3 - np.squeeze(predict)
+        sizenl = pretreat.winsorize_by_mad(residual, n=3, drop=False)
+        sizenl = pretreat.standardize(residual, multi_code=False)
+        return sizenl
+
+    SIZENL_standarded = excute_for_multidates(size_nona, lambda x:standardize(x),level='date')
+    size_lg_[SIZENL_standarded.index] = SIZENL_standarded
     
-    predict = model.fit(X, Y).predict(X)
-    SIZENL_residual = size_3 - np.squeeze(predict)
-    size_lg_[~size_lg.isna()] = SIZENL_residual
-    
-    sizenl = pretreat.winsorize_by_mad(size_lg_, n=3, drop=False)
-    sizenl = pretreat.standardize(sizenl, multi_code=False)
-    sizenl.name = 'sizenl'
-    return sizenl
+    size_lg_.name = 'sizenl'
+    return size_lg_

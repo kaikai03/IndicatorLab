@@ -210,7 +210,7 @@ def add_report_inds(data_df, inds_names=['totalCapital']):
     report_df = QA.QA_fetch_financial_report_adv(codes, date_start,date_end,ltype='EN').data[inds_names]
 
     data_ = pd.concat([data_df,report_df], axis=1)
-    data_[inds_names] = excute_for_multidates(data_[inds_names],lambda x:x.fillna(method='ffill'),level='code')
+    data_[inds_names] = excute_for_multidates(data_[inds_names],lambda x:x.fillna(method='ffill'),level=1)
     
     return data_.loc[data_df.index]
 

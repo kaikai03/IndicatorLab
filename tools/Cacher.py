@@ -15,7 +15,7 @@ import base.JuUnits as ju
 
 
 # __cache_dir__ = ju.get_root_path()+'/cache.feather/'
-__cache_dir__ = 'C://cache.feather/'
+__cache_dir__ = '/Users/kk/Documents/cache.feather/'
 __file_type__ = '.feather'
 
 class CACHE_TYPE(Enum):

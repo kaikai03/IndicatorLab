@@ -15,15 +15,16 @@ import base.JuUnits as ju
 
 
 # __cache_dir__ = ju.get_root_path()+'/cache.feather/'
-__cache_dir__ = '/Users/kk/Documents/cache.feather/'
+# __cache_dir__ = '/Users/kk/Documents/cache.feather/'
+__cache_dir__ = 'C:/cache.feather/'
 __file_type__ = '.feather'
 
 class CACHE_TYPE(Enum):
     default = ''
-    STOCK = '/stock/'
-    FACTOR = '/factor/'
-    MARKET = '/market/'
-    TMP = '/tmp/'
+    STOCK = 'stock/'
+    FACTOR = 'factor/'
+    MARKET = 'market/'
+    TMP = 'tmp/'
     
 # df = smpl.get_sample_by_zs(name='沪深300', end='2021-11-28', gap=2500,  only_main=True, filter_st=True).data
 # df.to_parquet(__cache_dir__+'test.parquet')

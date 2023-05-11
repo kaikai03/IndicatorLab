@@ -77,8 +77,9 @@ class FactorTest():
         self.ind_ret_df = None
         self.ind_binned = None
         
-    def process_ind(self,ind,ret,simple=False):
-        if not simple:
+    def process_ind_simple(self,ind,ret,need_descript=True):
+        # 简单测试，既提前准备好数据，不再由本类准备数据。
+        if need_descript:
             self.rank_ic = af.get_rank_ic(ind[self.main_field], ret)
             self.res = pd.DataFrame([af.get_ic_desc(self.rank_ic)], columns=['rankIC','rankIC_std','rankIC_T','rankIC_P'])
             self.res['ICIR']=round(af.get_ic_ir(self.rank_ic),6)
@@ -223,7 +224,8 @@ class FactorTest():
         
     def binned_plot(self, only_binned=False):
         # 去除绘图不需要的原始因子和code
-        ind_binned_noindex = self.ind_binned.reset_index().drop(['code', self.main_field],axis=1)
+        no_need = self.ind_binned.columns.difference(['group_label','ret_forward'],sort=False).to_list()
+        ind_binned_noindex = self.ind_binned.reset_index().drop(no_need+['code'],axis=1)
         # 按日期分组，组内再按分箱分组求总收益,结果会被倒序。
         ind_binned_ret_date = ind_binned_noindex.set_index(['date', 'group_label']).groupby(level=0).apply(lambda x: x.groupby(level=1).agg(sum))
 

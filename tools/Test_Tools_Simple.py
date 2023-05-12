@@ -21,7 +21,7 @@ from base.Constants import PLOT_TITLE
 
 
 class FactorTest():
-    def __init__(self,blenchmark_name='沪深500',freq="d",start,end,target_field):
+    def __init__(self,start,end,target_field,blenchmark_name='沪深500',freq="d"):
         assert freq !='w' ,"freq 禁止直接写w，自动resample week经常会选在周末而导致计算ic没有交集"
 
         self.main_field = target_field
@@ -29,8 +29,6 @@ class FactorTest():
         self.freq = freq
         self.start = start
         self.end = end
-        self.only_main = only_main
-        self.neutralize=neutralize
         self.rank_ic = None
         self.res = None
         self.ind_ret_df = None
@@ -45,7 +43,8 @@ class FactorTest():
             self.res['winning']=round(af.get_winning_rate(self.rank_ic),6)
         
         common_index = ind.index.get_level_values(0).unique().intersection(ret.index.get_level_values(0).unique())
-        ind_resample = ind.loc[common_index]
+        ind_resample = ind[[self.main_field]]
+        ind_resample = ind_resample.loc[common_index]
         self.ind_ret_df = pd.concat([ind_resample, ret], axis=1)
         self.ind_ret_df.dropna(axis=0,inplace=True)
         # 分箱
@@ -55,7 +54,7 @@ class FactorTest():
         if only_binned:
             self.binned_plot(only_binned)
         else:
-            self.rankIC_plot()
+            # self.rankIC_plot()
             self.binned_plot()
 
     def rankIC_plot(self):
@@ -82,22 +81,24 @@ class FactorTest():
         
     def get_ind_binned_ret_avg(self):
         # 此功能与 binned_plot 中，重复。
-        ind_binned_noindex = self.ind_binned.reset_index().drop(['code', self.main_field],axis=1)
+        no_need = self.ind_binned.columns.difference(['group_label','ret_forward'],sort=False).to_list()
+        ind_binned_noindex = self.ind_binned.reset_index().drop(no_need+['code'],axis=1)
         return ind_binned_noindex.drop(['date'],axis=1).dropna().set_index('group_label').groupby(level=0).apply(lambda x: x['ret_forward'].sum())
     
     def get_ind_binned_ret_cumsum(self):
         # 此功能与 binned_plot 中，重复。
-        ind_binned_noindex = self.ind_binned.reset_index().drop(['code', self.main_field],axis=1)
+        no_need = self.ind_binned.columns.difference(['group_label','ret_forward'],sort=False).to_list()
+        ind_binned_noindex = self.ind_binned.reset_index().drop(no_need+['code'],axis=1)
         ind_binned_ret_date = ind_binned_noindex.set_index(['date', 'group_label']).groupby(level=0).apply(lambda x: x.groupby(level=1).agg(sum))
         return ind_binned_ret_date.groupby(level=1).agg('cumsum')
     
         
     def binned_plot(self, only_binned=False):
         # 去除绘图不需要的原始因子和code
-        ind_binned_noindex = self.ind_binned.reset_index().drop(['code', self.main_field],axis=1)
+        no_need = self.ind_binned.columns.difference(['group_label','ret_forward'],sort=False).to_list()
+        ind_binned_noindex = self.ind_binned.reset_index().drop(no_need+['code'],axis=1)
         # 按日期分组，组内再按分箱分组求总收益,结果会被倒序。
         ind_binned_ret_date = ind_binned_noindex.set_index(['date', 'group_label']).groupby(level=0).apply(lambda x: x.groupby(level=1).agg(sum))
-
         fig = plt.figure(figsize=(1420/72,320/72))
         ind_binned_ret_all = ind_binned_noindex.drop(['date'],axis=1).dropna().set_index('group_label').groupby(level=0).apply(lambda x: x['ret_forward'].sum())
         plt.bar(ind_binned_ret_all.index,ind_binned_ret_all)
@@ -107,7 +108,7 @@ class FactorTest():
         if only_binned:
             return
 
-        blenchmark = smpl.get_benchmark(name=self.sample, start=self.start, end=self.end, gap=self.gap)
+        blenchmark = smpl.get_benchmark(name=self.sample, start=self.start, end=self.end)
         blenchmark_re = smpl.resample_stockdata_low(blenchmark.data,freq=self.freq)
         blenchmark_ret = smpl.get_forward_return(blenchmark_re,'close')
         blenchmark_ret.reset_index('code',drop=True,inplace=True)

@@ -86,6 +86,7 @@ class FactorTest():
             self.res['winning']=round(af.get_winning_rate(self.rank_ic),6)
         
         common_index = ind.index.get_level_values(0).unique().intersection(ret.index.get_level_values(0).unique())
+        ind_resample = ind[[self.main_field]]
         ind_resample = ind.loc[common_index]
         self.ind_ret_df = pd.concat([ind_resample, ret], axis=1)
         self.ind_ret_df.dropna(axis=0,inplace=True)
@@ -212,20 +213,19 @@ class FactorTest():
         
     def get_ind_binned_ret_avg(self):
         # 此功能与 binned_plot 中，重复。
-        ind_binned_noindex = self.ind_binned.reset_index().drop(['code', self.main_field],axis=1)
+        ind_binned_noindex = self.ind_binned.reset_index().drop(['code',self.main_field],axis=1)
         return ind_binned_noindex.drop(['date'],axis=1).dropna().set_index('group_label').groupby(level=0).apply(lambda x: x['ret_forward'].sum())
     
     def get_ind_binned_ret_cumsum(self):
         # 此功能与 binned_plot 中，重复。
-        ind_binned_noindex = self.ind_binned.reset_index().drop(['code', self.main_field],axis=1)
+        ind_binned_noindex = self.ind_binned.reset_index().drop(['code',self.main_field],axis=1)
         ind_binned_ret_date = ind_binned_noindex.set_index(['date', 'group_label']).groupby(level=0).apply(lambda x: x.groupby(level=1).agg(sum))
         return ind_binned_ret_date.groupby(level=1).agg('cumsum')
     
         
     def binned_plot(self, only_binned=False):
         # 去除绘图不需要的原始因子和code
-        no_need = self.ind_binned.columns.difference(['group_label','ret_forward'],sort=False).to_list()
-        ind_binned_noindex = self.ind_binned.reset_index().drop(no_need+['code'],axis=1)
+        ind_binned_noindex = self.ind_binned.reset_index().drop(['code',self.main_field],axis=1)
         # 按日期分组，组内再按分箱分组求总收益,结果会被倒序。
         ind_binned_ret_date = ind_binned_noindex.set_index(['date', 'group_label']).groupby(level=0).apply(lambda x: x.groupby(level=1).agg(sum))
 

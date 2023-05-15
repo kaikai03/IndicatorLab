@@ -54,7 +54,7 @@ class FactorTest():
         if only_binned:
             self.binned_plot(only_binned)
         else:
-            # self.rankIC_plot()
+            self.rankIC_plot()
             self.binned_plot()
 
     def rankIC_plot(self):

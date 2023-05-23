@@ -72,13 +72,15 @@ def get_rank_ic(factor_standardized, ret_forward):
 def get_ic_desc(ic_data):
     """因子信息系数的描述
        :param ic_data:{pd.Series，Index[date,]} --rankIC值, 
-       :return: {tuple(mean,std,t_static,p_value)}
+       :return: {tuple(mean,std,t_static,p_value,pos_rate,above_2percent_rate)}
     """
     tmp = ic_data.dropna()
     mean = tmp.mean()
     std = tmp.std()
     t_static,p_value = st.ttest_ind(tmp, [0] * len(tmp))
-    return mean,std,t_static,p_value
+    pos_rate = (tmp>0).sum()/ len(tmp)
+    above_2percent_rate = (tmp>0.02).sum()/ len(tmp)
+    return mean,std,t_static,p_value,pos_rate,above_2percent_rate
     
 def get_ic_ir(ic_data):
     return ic_data.mean()/ic_data.std()

@@ -152,6 +152,7 @@ class FactorTest():
         
         res_T = np.array(results,dtype=object).T.tolist()
         ind = pd.concat(res_T[0])
+        ind = ind[[self.main_field]]
         ret_forward_re = pd.concat(res_T[1])
 #         self.indx1 = ind 
         
@@ -170,7 +171,7 @@ class FactorTest():
 
         
 
-        self.res = pd.DataFrame([af.get_ic_desc(self.rank_ic)], columns=['rankIC','rankIC_std','rankIC_T','rankIC_P'])
+        self.res = pd.DataFrame([af.get_ic_desc(self.rank_ic)], columns=['rankIC','rankIC_std','rankIC_T','rankIC_P','POS%', '>2%'])
         self.res['ICIR']=round(af.get_ic_ir(self.rank_ic),6)
         self.res['winning']=round(af.get_winning_rate(self.rank_ic),6)
         

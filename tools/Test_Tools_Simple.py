@@ -38,7 +38,7 @@ class FactorTest():
         # 简单测试，既提前准备好数据，不再由本类准备数据。
         if need_descript:
             self.rank_ic = af.get_rank_ic(ind[self.main_field], ret)
-            self.res = pd.DataFrame([af.get_ic_desc(self.rank_ic)], columns=['rankIC','rankIC_std','rankIC_T','rankIC_P'])
+            self.res = pd.DataFrame([af.get_ic_desc(self.rank_ic)], columns=['rankIC','rankIC_std','rankIC_T','rankIC_P','POS%', '>2%'])
             self.res['ICIR']=round(af.get_ic_ir(self.rank_ic),6)
             self.res['winning']=round(af.get_winning_rate(self.rank_ic),6)
         

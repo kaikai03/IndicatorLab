@@ -102,6 +102,8 @@ class FactorTest():
         fig = plt.figure(figsize=(1420/72,320/72))
         ind_binned_ret_all = ind_binned_noindex.drop(['date'],axis=1).dropna().set_index('group_label').groupby(level=0).apply(lambda x: x['ret_forward'].sum())
         plt.bar(ind_binned_ret_all.index,ind_binned_ret_all)
+        monotony = np.linalg.lstsq(np.vstack([ind_binned_ret_all.values,np.ones(ind_binned_ret_all.shape[0])]).T, ind_binned_ret_all.index.to_numpy().reshape(-1,1),rcond=None)[0][0][0]
+        plt.text(0.01, 0.9, 'MonotonyScore = '+ str(round(monotony,4)),color={True:'green',False:'red'}[abs(monotony)>=0.5],transform=plt.gca().transAxes)
         plt.title('分箱平均收益', **PLOT_TITLE)
         plt.show()
         

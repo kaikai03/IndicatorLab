@@ -54,11 +54,12 @@ class FactorTest():
         if only_binned:
             self.binned_plot(only_binned)
         else:
+            self.autocorr_plot()
             self.rankIC_plot()
             self.binned_plot()
 
     def rankIC_plot(self):
-        fig = plt.figure(figsize=(1420/72/2,420/72))
+        fig = plt.figure(figsize=(1420/72/2,320/72))
         ax = fig.gca()
         ax.xaxis.set_major_locator(ticker.MaxNLocator(10))
         ax.yaxis.grid()
@@ -70,14 +71,27 @@ class FactorTest():
         plt.title('rankIC', **PLOT_TITLE)
         plt.show()
 
-        fig = plt.figure(figsize=(1420/72,420/72/7))
+        fig = plt.figure(figsize=(1420/72,440/72/7))
         ax = fig.gca()
         ax.xaxis.set_visible(False) 
         ax.yaxis.set_visible(False)
         ax.table(cellText=self.res.values.round(6),colLabels=self.res.columns,cellLoc='center', bbox = [0.0, 0.0, 1, 1]) 
         plt.title('desc', **PLOT_TITLE)
         plt.show()
-        
+    
+    def autocorr_plot(self):
+        x = self.ind_ret_df[self.main_field]
+        ranks = x.groupby([x.index.get_level_values(0)]).rank()
+        asset_rank = ranks.reset_index().pivot(index='date',columns='code')
+        autocorr = asset_rank.corrwith(asset_rank.shift(1), axis=1)
+        fig = plt.figure(figsize=(1420/72,440/72/7))
+        ax = fig.gca()
+        ax.set_ylim(0,1.1)
+        ax.yaxis.set_major_locator(plt.MultipleLocator(0.5))
+        ax.plot(autocorr.index.get_level_values(0).unique().tolist(),autocorr.values.tolist())
+        ax.yaxis.grid(linestyle="dotted",color="lightgray")
+        plt.title('autocorrelation', **PLOT_TITLE)
+        plt.show()
         
     def get_ind_binned_ret_avg(self):
         # 此功能与 binned_plot 中，重复。
@@ -102,7 +116,9 @@ class FactorTest():
         fig = plt.figure(figsize=(1420/72,320/72))
         ind_binned_ret_all = ind_binned_noindex.drop(['date'],axis=1).dropna().set_index('group_label').groupby(level=0).apply(lambda x: x['ret_forward'].sum())
         plt.bar(ind_binned_ret_all.index,ind_binned_ret_all)
-        monotony = np.linalg.lstsq(np.vstack([ind_binned_ret_all.values,np.ones(ind_binned_ret_all.shape[0])]).T, ind_binned_ret_all.index.to_numpy().reshape(-1,1),rcond=None)[0][0][0]
+        # monotony = np.linalg.lstsq(np.vstack([(ind_binned_ret_all+np.abs(ind_binned_ret_all.min())).values,np.ones(ind_binned_ret_all.shape[0])]).T, ind_binned_ret_all.index.to_numpy().reshape(-1,1),rcond=None)[0][0][0]
+        mono = np.linalg.lstsq(np.vstack([ind_binned_ret_all.index.to_numpy(),np.ones(ind_binned_ret_all.shape[0])]).T, ind_binned_ret_all.rank().values.reshape(-1,1),rcond=None)
+        monotony = mono[0][0][0]
         plt.text(0.01, 0.9, 'MonotonyScore = '+ str(round(monotony,4)),color={True:'green',False:'red'}[abs(monotony)>=0.5],transform=plt.gca().transAxes)
         plt.title('分箱平均收益', **PLOT_TITLE)
         plt.show()

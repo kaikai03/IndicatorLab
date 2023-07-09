@@ -50,13 +50,18 @@ class FactorTest():
         # 分箱
         self.ind_binned = self.ind_ret_df.groupby(level=0, group_keys=False).apply(lambda x: pretreat.binning(x, deal_column=self.main_field,box_count=10, inplace=True))
 
-    def plot(self,only_binned=False):
-        if only_binned:
-            self.binned_plot(only_binned)
-        else:
+    def plot(self, corr=True, rankic=True, binned_bar=True, binned_change=True, binned_cum=True):
+        if corr:
             self.autocorr_plot()
+        
+        if rankic:
             self.rankIC_plot()
-            self.binned_plot()
+            
+        if binned_bar or binned_change or binned_cum:
+            self.binned_plot(binned_bar, binned_change, binned_cum)
+            
+        
+            
 
     def rankIC_plot(self):
         fig = plt.figure(figsize=(1420/72/2,320/72))
@@ -107,52 +112,54 @@ class FactorTest():
         return ind_binned_ret_date.groupby(level=1).agg('cumsum')
     
         
-    def binned_plot(self, only_binned=False):
+    def binned_plot(self, binned_bar=True, binned_change=True, binned_cum=True):
         # 去除绘图不需要的原始因子和code
         no_need = self.ind_binned.columns.difference(['group_label','ret_forward'],sort=False).to_list()
         ind_binned_noindex = self.ind_binned.reset_index().drop(no_need+['code'],axis=1)
         # 按日期分组，组内再按分箱分组求总收益,结果会被倒序。
         ind_binned_ret_date = ind_binned_noindex.set_index(['date', 'group_label']).groupby(level=0).apply(lambda x: x.groupby(level=1).agg(sum))
-        fig = plt.figure(figsize=(1420/72,320/72))
-        ind_binned_ret_all = ind_binned_noindex.drop(['date'],axis=1).dropna().set_index('group_label').groupby(level=0).apply(lambda x: x['ret_forward'].sum())
-        plt.bar(ind_binned_ret_all.index,ind_binned_ret_all)
-        # monotony = np.linalg.lstsq(np.vstack([(ind_binned_ret_all+np.abs(ind_binned_ret_all.min())).values,np.ones(ind_binned_ret_all.shape[0])]).T, ind_binned_ret_all.index.to_numpy().reshape(-1,1),rcond=None)[0][0][0]
-        mono = np.linalg.lstsq(np.vstack([ind_binned_ret_all.index.to_numpy(),np.ones(ind_binned_ret_all.shape[0])]).T, ind_binned_ret_all.rank().values.reshape(-1,1),rcond=None)
-        monotony = mono[0][0][0]
-        plt.text(0.01, 0.9, 'MonotonyScore = '+ str(round(monotony,4)),color={True:'green',False:'red'}[abs(monotony)>=0.5],transform=plt.gca().transAxes)
-        plt.title('分箱平均收益', **PLOT_TITLE)
-        plt.show()
         
-        if only_binned:
-            return
+        if binned_bar:
+            fig = plt.figure(figsize=(1420/72,320/72))
+            ind_binned_ret_all = ind_binned_noindex.drop(['date'],axis=1).dropna().set_index('group_label').groupby(level=0).apply(lambda x: x['ret_forward'].sum())
+            plt.bar(ind_binned_ret_all.index,ind_binned_ret_all)
+            # monotony = np.linalg.lstsq(np.vstack([(ind_binned_ret_all+np.abs(ind_binned_ret_all.min())).values,np.ones(ind_binned_ret_all.shape[0])]).T, ind_binned_ret_all.index.to_numpy().reshape(-1,1),rcond=None)[0][0][0]
+            mono = np.linalg.lstsq(np.vstack([ind_binned_ret_all.index.to_numpy(),np.ones(ind_binned_ret_all.shape[0])]).T, ind_binned_ret_all.rank().values.reshape(-1,1),rcond=None)
+            monotony = mono[0][0][0]
+            plt.text(0.01, 0.9, 'MonotonyScore = '+ str(round(monotony,4)),color={True:'green',False:'red'}[abs(monotony)>=0.5],transform=plt.gca().transAxes)
+            plt.title('分箱平均收益', **PLOT_TITLE)
+            plt.show()
+        
+        if binned_change or binned_cum:
+            blenchmark = smpl.get_benchmark(name=self.sample, start=self.start, end=self.end)
+            blenchmark_re = smpl.resample_stockdata_low(blenchmark.data,freq=self.freq)
+            blenchmark_ret = smpl.get_forward_return(blenchmark_re,'close')
+            blenchmark_ret.reset_index('code',drop=True,inplace=True)
+            blenchmark_cum = blenchmark_ret.cumsum()
 
-        blenchmark = smpl.get_benchmark(name=self.sample, start=self.start, end=self.end)
-        blenchmark_re = smpl.resample_stockdata_low(blenchmark.data,freq=self.freq)
-        blenchmark_ret = smpl.get_forward_return(blenchmark_re,'close')
-        blenchmark_ret.reset_index('code',drop=True,inplace=True)
-        blenchmark_cum = blenchmark_ret.cumsum()
-
-        fig = plt.figure(figsize=(1420/72,320/72))
-        lns = ind_binned_ret_date.groupby(level=1).apply(lambda x: plt.plot(x.index.get_level_values(0).unique().tolist(),x.values.tolist(),label=x.index.get_level_values(1)[0]))
-        ax2 = plt.gca().twinx()
-        lns = [x[0] for x in lns.values] # lns,为了合并legend
-        lns += ax2.plot(blenchmark_ret,linestyle=":", linewidth=2,color="black",label='bm')
-        labs = [l.get_label() for l in lns]
-        legend = plt.legend(lns, labs,loc='upper left',fontsize='x-small',title='反序\n注意\n10最小')
-        legend.get_title().set_fontsize(fontsize = 12)
-        plt.grid(linestyle="dotted",color="lightgray")
-        plt.title('分箱收益变化', **PLOT_TITLE)
-        plt.show()
-
-        ind_binned_ret_cum = ind_binned_ret_date.groupby(level=1).apply(lambda x: x.cumsum())
-        fig = plt.figure(figsize=(1420/72,320/72))
-        lns = ind_binned_ret_cum.groupby(level=1).apply(lambda x: plt.plot(x.index.get_level_values(0).unique().tolist(),x.values.tolist(),label=x.index.get_level_values(1)[0]))
-        ax3 = plt.gca().twinx()
-        lns = [x[0] for x in lns.values] # lns,为了合并legend
-        lns += ax3.plot(blenchmark_cum,linestyle=":", linewidth=2,color="black",label='bm')
-        labs = [l.get_label() for l in lns]
-        legend = plt.legend(lns, labs,loc='upper left',fontsize='x-small',title='反序\n注意\n10最小')
-        legend.get_title().set_fontsize(fontsize = 12)
-        plt.grid(linestyle="dotted",color="lightgray")
-        plt.title('累计收益率', **PLOT_TITLE)
-        plt.show()
+        if binned_change:
+            fig = plt.figure(figsize=(1420/72,320/72))
+            lns = ind_binned_ret_date.groupby(level=1).apply(lambda x: plt.plot(x.index.get_level_values(0).unique().tolist(),x.values.tolist(),label=x.index.get_level_values(1)[0]))
+            ax2 = plt.gca().twinx()
+            lns = [x[0] for x in lns.values] # lns,为了合并legend
+            lns += ax2.plot(blenchmark_ret,linestyle=":", linewidth=2,color="black",label='bm')
+            labs = [l.get_label() for l in lns]
+            legend = plt.legend(lns, labs,loc='upper left',fontsize='x-small',title='反序\n注意\n10最小')
+            legend.get_title().set_fontsize(fontsize = 12)
+            plt.grid(linestyle="dotted",color="lightgray")
+            plt.title('分箱收益变化', **PLOT_TITLE)
+            plt.show()
+            
+        if binned_cum:
+            ind_binned_ret_cum = ind_binned_ret_date.groupby(level=1).apply(lambda x: x.cumsum())
+            fig = plt.figure(figsize=(1420/72,320/72))
+            lns = ind_binned_ret_cum.groupby(level=1).apply(lambda x: plt.plot(x.index.get_level_values(0).unique().tolist(),x.values.tolist(),label=x.index.get_level_values(1)[0]))
+            ax3 = plt.gca().twinx()
+            lns = [x[0] for x in lns.values] # lns,为了合并legend
+            lns += ax3.plot(blenchmark_cum,linestyle=":", linewidth=2,color="black",label='bm')
+            labs = [l.get_label() for l in lns]
+            legend = plt.legend(lns, labs,loc='upper left',fontsize='x-small',title='反序\n注意\n10最小')
+            legend.get_title().set_fontsize(fontsize = 12)
+            plt.grid(linestyle="dotted",color="lightgray")
+            plt.title('累计收益率', **PLOT_TITLE)
+            plt.show()

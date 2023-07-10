@@ -151,7 +151,7 @@ class FactorTest():
             plt.show()
             
         if binned_cum:
-            ind_binned_ret_cum = ind_binned_ret_date.groupby(level=1).apply(lambda x: x.cumsum())
+            ind_binned_ret_cum = ind_binned_ret_date.groupby(level=1,group_keys=False).apply(lambda x: x.cumsum())
             fig = plt.figure(figsize=(1420/72,320/72))
             lns = ind_binned_ret_cum.groupby(level=1).apply(lambda x: plt.plot(x.index.get_level_values(0).unique().tolist(),x.values.tolist(),label=x.index.get_level_values(1)[0]))
             ax3 = plt.gca().twinx()

@@ -55,7 +55,7 @@ def prepare_data(stock_df,ret_fs):
     ret_t = smpl.get_current_return(stock_df,'close')
 
     # 超额回报
-    ret_t_excess = ret_t.groupby(pd.Grouper(level='date', freq='1M')).apply(
+    ret_t_excess = ret_t.groupby(pd.Grouper(level='date', freq='1M'),group_keys=False).apply(
             lambda x:(x-ret_fs.get(x.index[0][0].strftime('%Y-%m'),default=ret_fs[-1])))
 
     # 市值
@@ -116,7 +116,7 @@ def momentum(ret,ret_fs):
         :param ret：{pd.Series} --回报率
         :param ret_fs：{pd.Series} --无风险回报率
     '''
-    ret_excess = ret.groupby(pd.Grouper(level='date', freq='1M')).apply(
+    ret_excess = ret.groupby(pd.Grouper(level='date', freq='1M'),group_keys=False).apply(
             lambda x:np.log(1+x)-np.log(1+ret_fs.get(x.index[0][0].strftime('%Y-%m'),default=ret_fs[-1])))
 
     def calc_(data,window=252,half_life_window=126):
@@ -175,7 +175,7 @@ def earnings_yield(ret,market_value,stock_industry):
 
     # 年报转累进转当季
     report_df = excute_for_multidates(report_df,
-                                      lambda stock:stock.groupby(pd.Grouper(level='report_date', freq='1Y')).apply(
+                                      lambda stock:stock.groupby(pd.Grouper(level='report_date', freq='1Y'),group_keys=False).apply(
                                       lambda x:x.diff(1).fillna(x)),level='code')
 
     # 四季（年）滚动加总，“最近12个月”
@@ -206,7 +206,7 @@ def earnings_yield(ret,market_value,stock_industry):
 
     ret_industry = pd.concat([ret,stock_industry], axis=1).sort_index()
     # 日内行业平均
-    ret_industry_meam = ret_industry.reset_index().set_index(['date','industry']).groupby(level=[0,1]).mean()
+    ret_industry_meam = ret_industry.reset_index().drop(columns=['code']).set_index(['date','industry']).groupby(level=[0,1],group_keys=False).mean()
     ret_industry_expect = excute_for_multidates(ret_industry_meam, lambda x:ret_cum_reg(x),level='industry')
 
     EPIBS = ret_expect + ret_industry_expect.loc[list(zip(ret_industry.index.get_level_values(0),ret_industry['industry']))]['ret'].values

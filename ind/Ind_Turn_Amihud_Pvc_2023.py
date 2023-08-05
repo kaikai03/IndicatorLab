@@ -96,7 +96,7 @@ def get_pvc(stock_df):
 
 def get_pvc_optimize(stock_df,cur_ret,pvc):
     # 量价相关性_改进因子 是量价相关性因子剔除对应期限的涨跌幅和成交量，剔除后的信息能更加纯粹体现量价相关程度。该因子的方向为负。
-    # 量价相关性_改进 = 量价相关性 − 𝛽1∗𝑅𝑒𝑡 − 𝛽2∗𝑉𝑜𝑙 − 𝜀 (于pvc相反，效果和质量差不多，但ic较差)
+    # 量价相关性_改进 = 量价相关性 − 𝛽1∗𝑅𝑒𝑡 − 𝛽2∗𝑉𝑜𝑙 − 𝜀 (与pvc相反，效果和质量差不多，但ic较差)
     pvc.name = 'pvc'
     def reg(df):
         X = df[['ret','volume']].values.reshape(-1, 2)

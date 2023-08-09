@@ -37,7 +37,7 @@ def is_cache_exist(cache_name, cache_type=CACHE_TYPE.default):
     return os.path.exists(file_path(cache_name,cache_type))
 
 def save_cache(name, data, cache_type=CACHE_TYPE.default):
-    data.reset_index().to_feather(file_path(name,cache_type=cache_type))
+    data.reset_index().to_feather(file_path(name,cache_type=cache_type),compression_level=20,compression='zstd')
     
 def load_cache(cache_name:str, to_series:bool=False, time_flag:str='date',cache_type=CACHE_TYPE.default):
     if not is_cache_exist(cache_name,cache_type=cache_type):

@@ -58,7 +58,7 @@ def MACD_JCSC(data_series,SHORT=12,LONG=26,M=9,deviate_window=10):
         deviation = tmp_df.dropna().rolling(deviate_window, method='table').apply(lambda x:calc_deviation(x,deviate_window), raw=True, engine='numba')['origin_data']
 
         
-        return pd.DataFrame({'MACD':MACD,'DIFF':DIFF,'DEA':DEA,'CROSS':CROSS,'DEVIATE':deviation})
+        return pd.DataFrame({'MACD':MACD,'DIFF':DIFF,'DEA':DEA,'MACD_CROSS':CROSS,'DEVIATE':deviation})
 
     return excute_for_multidates(data_series, kerrel, level=1)
 

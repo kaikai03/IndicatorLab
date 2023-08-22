@@ -65,7 +65,7 @@ def MACD_JCSC(data_series,SHORT=12,LONG=26,M=9,deviate_window=10):
 
 def MACD_plot(MACD_df,low_frequence=True):
     groups = MACD_df.groupby(level=1)
-    assert len(groups)<20,'不允许超过20组'
+    assert len(groups)<20,'一次显示不允许超过20组'
     fig = plt.figure(figsize=(2120/72,220*len(groups)/72))
     for idx,item in enumerate(groups):
         inds_ = item[1].reset_index('code',drop=True)

@@ -108,7 +108,7 @@ class FactorTest():
         # 此功能与 binned_plot 中，重复。
         no_need = self.ind_binned.columns.difference(['group_label','ret_forward'],sort=False).to_list()
         ind_binned_noindex = self.ind_binned.reset_index().drop(no_need+['code'],axis=1)
-        ind_binned_ret_date = ind_binned_noindex.set_index(['date', 'group_label']).groupby(level=0).apply(lambda x: x.groupby(level=1).agg(sum))
+        ind_binned_ret_date = ind_binned_noindex.set_index(['date', 'group_label']).groupby(level=0).apply(lambda x: x.groupby(level=1).agg('sum'))
         return ind_binned_ret_date.groupby(level=1).agg('cumsum')
     
         
@@ -117,17 +117,25 @@ class FactorTest():
         no_need = self.ind_binned.columns.difference(['group_label','ret_forward'],sort=False).to_list()
         ind_binned_noindex = self.ind_binned.reset_index().drop(no_need+['code'],axis=1)
         # 按日期分组，组内再按分箱分组求总收益,结果会被倒序。
-        ind_binned_ret_date = ind_binned_noindex.set_index(['date', 'group_label']).groupby(level=0).apply(lambda x: x.groupby(level=1).agg(sum))
+        ind_binned_ret_date = ind_binned_noindex.set_index(['date', 'group_label']).groupby(level=0).apply(lambda x: x.groupby(level=1).agg('sum'))
         
         if binned_bar:
-            fig = plt.figure(figsize=(1420/72,320/72))
+            fig = plt.figure(figsize=(1420/72,180/72))
             ind_binned_ret_all = ind_binned_noindex.drop(['date'],axis=1).dropna().set_index('group_label').groupby(level=0).apply(lambda x: x['ret_forward'].sum())
             plt.bar(ind_binned_ret_all.index,ind_binned_ret_all)
-            # monotony = np.linalg.lstsq(np.vstack([(ind_binned_ret_all+np.abs(ind_binned_ret_all.min())).values,np.ones(ind_binned_ret_all.shape[0])]).T, ind_binned_ret_all.index.to_numpy().reshape(-1,1),rcond=None)[0][0][0]
             mono = np.linalg.lstsq(np.vstack([ind_binned_ret_all.index.to_numpy(),np.ones(ind_binned_ret_all.shape[0])]).T, ind_binned_ret_all.rank().values.reshape(-1,1),rcond=None)
             monotony = mono[0][0][0]
             plt.text(0.01, 0.9, 'MonotonyScore = '+ str(round(monotony,4)),color={True:'green',False:'red'}[abs(monotony)>=0.5],transform=plt.gca().transAxes)
-            plt.title('分箱平均收益', **PLOT_TITLE)
+            plt.title('分箱平均收益(总)', **PLOT_TITLE)
+            plt.show()
+            
+            fig = plt.figure(figsize=(1420/72,180/72))
+            ind_binned_ret_all = ind_binned_noindex.drop(['date'],axis=1).dropna().set_index('group_label').groupby(level=0).apply(lambda x: x['ret_forward'].mean())
+            plt.bar(ind_binned_ret_all.index,ind_binned_ret_all)
+            mono = np.linalg.lstsq(np.vstack([ind_binned_ret_all.index.to_numpy(),np.ones(ind_binned_ret_all.shape[0])]).T, ind_binned_ret_all.rank().values.reshape(-1,1),rcond=None)
+            monotony = mono[0][0][0]
+            plt.text(0.01, 0.9, 'MonotonyScore = '+ str(round(monotony,4)),color={True:'green',False:'red'}[abs(monotony)>=0.5],transform=plt.gca().transAxes)
+            plt.title('分箱平均收益（均）', **PLOT_TITLE)
             plt.show()
         
         if binned_change or binned_cum:

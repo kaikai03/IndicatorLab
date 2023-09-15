@@ -173,6 +173,31 @@ def get_current_return(stocks_df,column,stride=1):
     ret.name = 'ret'
     return ret
 
+def get_future_period_return(stocks_df,column,forward_window,method='sum'):
+    '''计算未来一定区间的（某种总）回报率
+    :param stocks_df: {pd.DataFrame 或 stock_struct}
+    :param column: {string}
+    :param forward_window: {int} --前望窗口长度
+    :param method: {str in ['mean', 'sum', 'std', 'median', 'skew', 'kurt', 'min', 'max']} --计算方法，
+    :return: {pd.Series}
+    '''
+    assert method in ['mean', 'sum', 'std', 'median', 'skew', 'kurt', 'min', 'max'], "method MUST Be one of ['mean', 'sum', 'std', 'median', 'skew', 'kurt', 'min', 'max']}"
+    def calc(x):
+        ret = (x/x.shift(1)-1).shift(-1)
+        if method in ['sum']:
+            ret = np.log(ret+1)
+            
+        ret = ret[::-1].rolling(forward_window).agg(method)[::-1]
+        
+        if method in ['sum']:
+            ret = np.exp(ret)-1
+        
+        return ret
+        
+    ret = stocks_df[column].groupby(level=1, group_keys=False).apply(calc)
+    ret.name = 'ret_future_'+str(forward_window)+'_'+method
+    return ret
+
 def get_rank(data, codes=None,quantile=False, column=None):
     '''get_rank(a,['000001','000002'],column=['totalAssets','ROE'])'''
     if len(data.index.names) >= 2:

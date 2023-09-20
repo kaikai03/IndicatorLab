@@ -175,7 +175,13 @@ def fetch_north_realtime_from_eastmoney(model='north'):
 
     # 原数据 日期和时间字段是分开的，且不带年份
     temp_df['datetime'] = pd.to_datetime(str(dt.now().year)+ '-' + date_+' '+temp_df['datetime'])
-    temp_df= temp_df.set_index('datetime').astype('float64')
+    try:
+        temp_df= temp_df.set_index('datetime').astype('float64')
+    except Exception as e:
+        traceback.print_exception(type(e), e, sys.exc_info()[2])
+        print(temp_df)
+    else:
+        temp_df= temp_df.set_index('datetime')
 
     temp_df['code']=CODE_KEY[model]   #兼容QA查询
     temp_df['model']=model

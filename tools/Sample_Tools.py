@@ -73,6 +73,19 @@ def get_data(codes_list, start=None, end=None, gap=60, freq=QA.FREQUENCE.DAY, ma
 #                                output=QA.OUTPUT_FORMAT.DATASTRUCT)
     return data
 
+def excute_priod_limit(stocks_df, limit=60):
+    '''排除数据（交易天数or时间）过少的数据
+    :param stocks_df: {pd.DataFrame 或 stock_struct}
+    :param limit: {int} --数据量（天数）限制
+    :return: {pd.DataFrame} --返回原数据对象的指针，未新建对象
+    '''
+    count = excute_for_multidates(stocks_df, lambda x:x.shape[0],level='code')
+    exclude = count[x<=limit]
+    if exclude.count() == 0:
+        return stocks_df
+    excluded_codes = stocks_df.index.get_level_values('code').difference(exclude.index)
+    return stocks_df.loc[(slice(None),exclude_new),]
+
 def get_index_data(code, start=None, end=None, gap=60, freq=QA.FREQUENCE.DAY):
     ''':param freq： --只能比day频率高，需要更低频需要从day重新采样。
     '''

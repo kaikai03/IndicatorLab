@@ -4,9 +4,14 @@ import time
 
 import pandas as pd
 
+
 module_path = os.path.abspath(os.path.join('..')) 
 if module_path not in sys.path: 
     sys.path.append(module_path)
+
+self_path = module_path+'\\EAST'
+if self_path not in sys.path: 
+    sys.path.append(self_path)
     
 
 from QUANTAXIS.QAUtil import (

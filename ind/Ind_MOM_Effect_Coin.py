@@ -87,7 +87,7 @@ def get_intraday_turnover_reverse(stock_df, turnover):
 
 def get_overnight_fluctuation_reverse(stock_df):
 # 隔夜反转-波动翻转
-    overnight_ret = stock_df['open'] / stock_df['close'].shift(1) -1
+    overnight_ret = excute_for_multidates(stock_df, lambda x:(x['open']/x['close'].shift(1))-1, level='code')
     overnight_ret_std20 = excute_for_multidates(overnight_ret, lambda x:x.rolling(20).std(), level=1)
 
     overnight_market_std = excute_for_multidates(overnight_ret_std20, lambda x:x.mean(), level=0)
@@ -99,7 +99,7 @@ def get_overnight_fluctuation_reverse(stock_df):
 
 def get_overnight_turnover_reverse(stock_df, turnover):
     # 隔夜反转-换手翻转
-    overnight_ret = stock_df['open'] / stock_df['close'].shift(1) -1
+    overnight_ret = excute_for_multidates(stock_df, lambda x:(x['open']/x['close'].shift(1))-1, level='code')
     turnover_dif = excute_for_multidates(turnover, lambda x:x.diff(), level=1)
     market_turnover_dif = excute_for_multidates(turnover_dif, lambda x:x.mean(), level=0)
     condition = excute_for_multidates(turnover_dif, lambda x:x<market_turnover_dif[x.index.get_level_values(0)[0]], level=0)

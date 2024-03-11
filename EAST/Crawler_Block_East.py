@@ -239,7 +239,15 @@ def fetch_stock_block_list_from_eastmoney(pagenumber=1, pagelimit=400, model='co
 #     print(temp_df)
     ret_stock_block_list = temp_df.rename(columns=EM_KEY_DIC)
     percent_exchange = ['pct','amplitude','turnoverrate','pct5m','speed','pct60d','pct360d','upleadpct','downleadpct']
-    ret_stock_block_list[percent_exchange] = ret_stock_block_list[percent_exchange].apply(lambda x: x.apply(lambda xx: xx/100 if np.char.isnumeric(str(xx)) else xx))
+    
+    try:
+        ret_stock_block_list[percent_exchange] = ret_stock_block_list[percent_exchange] / 100
+    except Exception as e:
+        print(ret_stock_block_list[percent_exchange])
+        traceback.print_exception(type(e), e, sys.exc_info()[2])
+        print(u'ret_stock_block_list percent_exchange: failed\n') 
+        ret_stock_block_list[percent_exchange] = ret_stock_block_list[percent_exchange].apply(lambda x: x.apply(lambda xx: xx/100 if np.char.isnumeric(str(xx)) else xx))
+        print(u'percent_exchange: remedy\n') 
     
     ret_stock_block_list.replace('-', 0, inplace=True) 
     ret_stock_block_list['resource'] = 'eastmoney'
@@ -295,8 +303,15 @@ def fetch_stock_block_components_from_eastmoney(concept='BK0731',
 
     ret_stock_concept_components.replace('-', 0, inplace=True) 
     percent_exchange = ['pct','amplitude','turnoverrate','pct5m','speed','pct60d','pct360d']
-    ret_stock_concept_components[percent_exchange] = ret_stock_concept_components[percent_exchange].apply(lambda x: x.apply(lambda xx: xx/100 if np.char.isnumeric(str(xx)) else xx))
-        
+    
+    try:
+        ret_stock_concept_components[percent_exchange] = ret_stock_concept_components[percent_exchange] / 100
+    except Exception as e:
+        print(ret_stock_concept_components[percent_exchange])
+        traceback.print_exception(type(e), e, sys.exc_info()[2])
+        print(u'ret_stock_concept_components percent_exchange: failed\n') 
+        ret_stock_concept_components[percent_exchange] = ret_stock_concept_components[percent_exchange].apply(lambda x: x.apply(lambda xx: xx/100 if np.char.isnumeric(str(xx)) else xx))
+        print(u'percent_exchange: remedy\n') 
 
     return ret_stock_concept_components
 
@@ -344,8 +359,16 @@ def fetch_block_kline_from_eastmoney(block_code: str="BK0428",  freq=QA.FREQUENC
     temp_df['code'] = block_code
 
     percent_exchange = ['amplitude','spreadrate','turnover']
-    temp_df[percent_exchange] = temp_df[percent_exchange].apply(lambda x: x.apply(lambda xx: xx/100 if np.char.isnumeric(str(xx)) else xx))
 
+    try:
+        temp_df[percent_exchange] = temp_df[percent_exchange] / 100
+    except Exception as e:
+        print(temp_df[percent_exchange])
+        traceback.print_exception(type(e), e, sys.exc_info()[2])
+        print(u'temp_df percent_exchange: failed\n') 
+        temp_df[percent_exchange] = temp_df[percent_exchange].apply(lambda x: x.apply(lambda xx: xx/100 if np.char.isnumeric(str(xx)) else xx))
+        print(u'percent_exchange: remedy\n') 
+    
     temp_df['type'] = freq
     temp_df['date'] = pd.to_datetime(temp_df['datetime']).dt.strftime('%Y-%m-%d')
     temp_df['datetime'] = pd.to_datetime(temp_df['datetime'])

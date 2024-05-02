@@ -103,7 +103,7 @@ def main():
     if int(get_cur_time()[8:10]) % 4 == 0:
         update_east_stock_block() # 更新block
         
-    if QA_util_if_trade(today):
+    if QA_util_if_trade(today) or today in ['2024-05-02','2024-05-03']:
         update_north_line(mode='fast') # 更新北向日线数据
         time.sleep(10)
         update_north_1min() # 更新北向1min数据

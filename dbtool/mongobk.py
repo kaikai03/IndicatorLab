@@ -3,9 +3,9 @@ from pymongo import MongoClient
 from datetime import datetime
 import sys
 
-port = 23333
+port = 27017
 dbpath = 'mongodb://localhost'+ ':' + str(port) +'/'
-out_path = 'G:\\dbbk'
+out_path = 'E:\\dbbk'
 
 
 
@@ -26,7 +26,7 @@ def full_backup():
     if res==0:
         client = MongoClient(dbpath)
         quantaxis_db = client["quantaxis"]
-        backuplog_collection = quantaxis_db['backuplog']
+        backuplog_collection = quantaxis_db['backup_log']
         data = {'type':"full",
             'excute_t': now_time, 
             'last_rel_ts': '', 
@@ -45,7 +45,7 @@ def increment_backup():
     print('start increment_backup')
     client = MongoClient(dbpath)
     quantaxis_db = client["quantaxis"]
-    backuplog_collection = quantaxis_db['backuplog']
+    backuplog_collection = quantaxis_db['backup_log']
 
     local_db = client["local"]
     oplog_collection = local_db['oplog.rs']

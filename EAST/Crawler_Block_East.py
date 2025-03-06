@@ -316,7 +316,7 @@ def fetch_stock_block_components_from_eastmoney(concept='BK0731',
     return ret_stock_concept_components
 
 
-def fetch_block_kline_from_eastmoney(block_code: str="BK0428",  freq=QA.FREQUENCE.DAY) -> pd.DataFrame:
+def fetch_block_kline_from_eastmoney(block_code: str="BK0428", endtime: str="20300101",  freq=QA.FREQUENCE.DAY) -> pd.DataFrame:
     """获取板块k线（基础函数）
     http://push2his.eastmoney.com/api/qt/stock/kline/get?cb=jQuery112404939798105940868_1629173273789&secid=90.BK0917&ut=fa5fd1943c7b386f172d6893dbfba10b&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61&klt=60&fqt=0&beg=19900101&end=20220101&_=1629173274401
     """
@@ -331,7 +331,7 @@ def fetch_block_kline_from_eastmoney(block_code: str="BK0428",  freq=QA.FREQUENC
         "fqt": "0",
         "klt": "101" if freq == QA.FREQUENCE.DAY else ("15" if freq == QA.FREQUENCE.FIFTEEN_MIN else "60"),
         'beg':'19900101',
-        'end': '20250101',
+        'end': endtime,
         "_": int(time.time() * 1000),
     }
     
@@ -633,7 +633,9 @@ def update_all_block_kline(error_threhold=5,verbose=False):
         
         time.sleep(sleep_params[idx])
         
-        k_day_df = fetch_block_kline_from_eastmoney(block_code,freq=QA.FREQUENCE.DAY)
+        range_end = dt.now().strftime('%Y%m%d')
+        
+        k_day_df = fetch_block_kline_from_eastmoney(block_code,range_end,freq=QA.FREQUENCE.DAY)
         if k_day_df is None:
             print(("%s day未取到数据") % block_code) 
             error_count+=1
@@ -641,7 +643,7 @@ def update_all_block_kline(error_threhold=5,verbose=False):
         save_stock_block_kline(k_day_df)
         time.sleep(sleep_params[idx]/randint(1, 3))
         
-        k_hour_df = fetch_block_kline_from_eastmoney(block_code,freq=QA.FREQUENCE.HOUR)
+        k_hour_df = fetch_block_kline_from_eastmoney(block_code,range_end,freq=QA.FREQUENCE.HOUR)
         if k_hour_df is None:
             print(("%s hour未取到数据") % block_code) 
             error_count+=1
@@ -649,7 +651,7 @@ def update_all_block_kline(error_threhold=5,verbose=False):
         save_stock_block_kline(k_hour_df)
         time.sleep(sleep_params[idx]/randint(1, 4))
         
-        k_5min_df = fetch_block_kline_from_eastmoney(block_code,freq=QA.FREQUENCE.FIVE_MIN)
+        k_5min_df = fetch_block_kline_from_eastmoney(block_code,range_end,freq=QA.FREQUENCE.FIVE_MIN)
         if k_5min_df is None:
             print(("%s 5min未取到数据") % block_code) 
             error_count+=1

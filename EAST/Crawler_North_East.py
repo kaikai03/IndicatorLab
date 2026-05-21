@@ -79,7 +79,7 @@ def fetch_north_day_from_eastmoney(mode='normal',model='north'):
     lmt = {'fast':30,'normal':500,'init':5000}[mode]
         
     def get_url():
-        return "http://push2his.eastmoney.com/api/qt/kamt.kline/get"
+        return "https://push2his.eastmoney.com/api/qt/kamt.kline/get"
 
 
     params = {
@@ -137,7 +137,7 @@ def fetch_north_realtime_from_eastmoney(model='north'):
     assert model in ['north','south'], 'model error,must in {north|south}'
 
     def get_url():
-        return "http://push2.eastmoney.com/api/qt/kamt.rtmin/get"
+        return "https://push2.eastmoney.com/api/qt/kamt.rtmin/get"
 
     params = {
         'fields1': 'f1,f3' if model=='north' else 'f2,f4',
@@ -280,7 +280,7 @@ def fetch_north_top10deal_from_eastmoney(type_='hk2sh',date_str='2021-09-28'):
     assert type_ in TOP10DEAL_TYPE, 'type_ error,must in {hk2sh|hk2sz|sh2hk|sz2hk}'
 
     def get_url():
-        return "http://datacenter-web.eastmoney.com/api/data/v1/get"
+        return "https://datacenter-web.eastmoney.com/api/data/v1/get"
 
     params = {
         'callback':'jQuery112304439363764547424_{:d}'.format(int(dt.utcnow().timestamp())),
@@ -397,7 +397,7 @@ def update_deal_top10(verbose=False):
 
     dates = date_range(start_date,end_date)
     print('dates',dates)
-    sleep_params = np.random.exponential(scale=0.9,size=len(dates))+0.001
+    sleep_params = np.random.exponential(scale=1.5,size=len(dates))+70
     print('sleep_params',sleep_params)
     for idx, d in enumerate(dates):
         time.sleep(sleep_params[idx])

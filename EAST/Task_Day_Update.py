@@ -78,10 +78,10 @@ def fetch_update_date():
         res = res['datetime']
     return res
     
-def update_update_date():
+def update_update_date(day):
     coll = DATABASE.update_em
     coll.delete_one({})
-    coll.insert_one({'datetime':get_cur_time()})
+    coll.insert_one({'datetime':day})
 
 def is_today_updated():
     """今日是否已经更新过,更新过了返回True
@@ -98,27 +98,38 @@ def main():
         stop_log()
         return
     
-    today = get_cur_time()[0:10]
+    start_time = get_cur_time()
+    today = start_time[0:10]
     
     if int(get_cur_time()[8:10]) % 4 == 0:
         update_east_stock_block() # 更新block
         
-    if QA_util_if_trade(today) or today in ['2024-05-02','2024-05-03']:
+    if QA_util_if_trade(today):
         update_north_line(mode='fast') # 更新北向日线数据
-        time.sleep(10)
+        time.sleep(30)
         update_north_1min() # 更新北向1min数据
-        time.sleep(10)
-        update_all_block_kline(verbose=False) # 更新k线
-        time.sleep(30)
-        update_1min_block_kline(verbose=False) # 获取今日 1min k线
-        time.sleep(30)
+        time.sleep(50)
         update_deal_top10(verbose=True) # 更新北向交易top10数据
+        print('基本更新已完成')
+        time.sleep(30)
+        print('更新k线 已去掉')
+        # update_all_block_kline(verbose=False) # 更新k线
+        time.sleep(50)
+        print('更新1min k线已去掉')
+        # update_1min_block_kline(verbose=False) # 获取今日 1min k线
         time.sleep(5)
-        
+
+    # if today in ['2025-10-02','2025-10-03','2025-10-06','2025-10-07','2025-10-08']:
+    #     print('国庆特别更新')
+    #     update_all_block_kline(verbose=False) # 更新k线
+    #     time.sleep(30)
+    #     update_1min_block_kline(verbose=False) # 获取今日 1min k线
+    #     time.sleep(30)
+
     
 
     print('更新完成')
-    update_update_date()
+    update_update_date(start_time)
     stop_log()
     
 def init():

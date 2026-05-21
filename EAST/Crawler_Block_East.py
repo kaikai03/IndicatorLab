@@ -202,7 +202,8 @@ def fetch_stock_block_list_from_eastmoney(pagenumber=1, pagelimit=400, model='co
     '''抓取东方财富--板块列表（基础函数）
     '''
     def get_random_stock_block_url():
-            url = "http://{:d}.push2.eastmoney.com/api/qt/clist/get".format(randint(1, 99))
+            # url = "https://{:d}.push2.eastmoney.com/api/qt/clist/get".format(randint(1, 99))
+            url = "https://push2.eastmoney.com/api/qt/clist/get"
             return url
 
     params = {
@@ -263,7 +264,8 @@ def fetch_stock_block_components_from_eastmoney(concept='BK0731',
     http://28.push2.eastmoney.com/api/qt/clist/get?cb=jQuery112405892331704393758_1629080255227&pn=2&pz=20&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid=f3&fs=b:BK0981+f:!50&fields=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f12,f13,f14,f15,f16,f17,f18,f20,f21,f23,f24,f25,f22,f11,f62,f128,f136,f115,f152,f45&_=1629080255234    
     '''
     def get_random_stock_block_components_url():
-        url = "http://{:d}.push2.eastmoney.com/api/qt/clist/get".format(randint(1, 99))
+        # url = "https://{:d}.push2.eastmoney.com/api/qt/clist/get".format(randint(1, 99))
+        url = "https://push2.eastmoney.com/api/qt/clist/get"
         return url
     
     params = {
@@ -321,7 +323,7 @@ def fetch_block_kline_from_eastmoney(block_code: str="BK0428", endtime: str="203
     http://push2his.eastmoney.com/api/qt/stock/kline/get?cb=jQuery112404939798105940868_1629173273789&secid=90.BK0917&ut=fa5fd1943c7b386f172d6893dbfba10b&fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61&klt=60&fqt=0&beg=19900101&end=20220101&_=1629173274401
     """
     assert freq in [QA.FREQUENCE.DAY, QA.FREQUENCE.HOUR, QA.FREQUENCE.FIVE_MIN], 'freq only support DAY|HOUR|FIVE_MIN（自我规制）'
-    url = "http://push2his.eastmoney.com/api/qt/stock/kline/get"
+    url = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
     params = {
         "cb": "jQuery1124005797095004732822_{:d}".format(int(dt.utcnow().timestamp())),
         "secid": f"90.{block_code}",
@@ -330,10 +332,14 @@ def fetch_block_kline_from_eastmoney(block_code: str="BK0428", endtime: str="203
         "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",
         "fqt": "0",
         "klt": "101" if freq == QA.FREQUENCE.DAY else ("15" if freq == QA.FREQUENCE.FIFTEEN_MIN else "60"),
-        'beg':'19900101',
+        'beg':'0',
         'end': endtime,
+        'smplmt': 460,
+        'lmt': 1000000,
         "_": int(time.time() * 1000),
     }
+    
+    
     
     json_data = request_json_get(url, params, mode='jQuery', verbose=False)
 
@@ -381,6 +387,7 @@ def fetch_block_kline_from_eastmoney(block_code: str="BK0428", endtime: str="203
     #print(temp_df)
     return temp_df.set_index('datetime')  #为了方便重采样，入库时会reset
 
+
     
     
 def fetch_block_kline_realtime_from_eastmoney(block_code='BK0428'):
@@ -389,7 +396,7 @@ def fetch_block_kline_realtime_from_eastmoney(block_code='BK0428'):
     '''
         
     def get_url():
-        return "http://push2.eastmoney.com/api/qt/stock/trends2/get"
+        return "https://push2.eastmoney.com/api/qt/stock/trends2/get"
     
     params = {
         'cb': 'jQuery1124021715896797765277_{:d}'.format(int(dt.utcnow().timestamp())),
@@ -438,11 +445,11 @@ def fetch_block_kline_realtime_from_eastmoney(block_code='BK0428'):
 
 def fetch_block_moneyflow_realtime_from_eastmoney(block_code='BK0428'):
     '''抓取东方财富板块概念实时资金流（基础函数）
-        http://push2.eastmoney.com/api/qt/stock/get?secid=90.BK0428&ut=bd1d9ddb04089700cf9c27f6f7426281&fields=f57,f135,f136,f137,f138,f139,f140,f141,f142,f143,f144,f145,f146,f147,f148,f149,f193,f194,f195,f196,f197,f152&cb=jQuery1124021715896797765277_1633592123562&_=1633592123570
+        https://push2.eastmoney.com/api/qt/stock/get?secid=90.BK0428&ut=bd1d9ddb04089700cf9c27f6f7426281&fields=f57,f135,f136,f137,f138,f139,f140,f141,f142,f143,f144,f145,f146,f147,f148,f149,f193,f194,f195,f196,f197,f152&cb=jQuery1124021715896797765277_1633592123562&_=1633592123570
     '''
         
     def get_url():
-        return "http://push2.eastmoney.com/api/qt/stock/get"
+        return "https://push2.eastmoney.com/api/qt/stock/get"
     
     params = {
         'secid': '90.{:s}'.format(block_code),
@@ -496,7 +503,7 @@ def fetch_east_stock_block_from_eastmoney(verbose=False):
     total=len(concept)+len(industry)
     
     # 生成随机延迟
-    sleep_params = np.random.exponential(scale=0.3,size=total)+0.001
+    sleep_params = np.random.exponential(scale=2.5,size=total)+70
     
     for idx, item in tqdm(pd.concat([concept,industry]).iterrows(),total=total):
         if verbose:
@@ -622,8 +629,9 @@ def update_all_block_kline(error_threhold=5,verbose=False):
     error_count = 0
     
     # 生成随机延迟
-    sleep_params = np.random.exponential(scale=0.3,size=total)+0.001
-    
+    sleep_params = np.random.exponential(scale=1.3,size=total)+70
+    range_end = dt.now().strftime('%Y%m%d')
+
     for idx, block_code in tqdm(enumerate(all_code) ,total=total):
         if error_count > error_threhold:
             raise '累计错误超过额定次数，kline更新终止 ========='
@@ -631,9 +639,8 @@ def update_all_block_kline(error_threhold=5,verbose=False):
         if verbose:
             print('start:',idx, block_code)
         
-        time.sleep(sleep_params[idx])
-        
-        range_end = dt.now().strftime('%Y%m%d')
+        time.sleep(sleep_params[idx]/randint(1, 3))
+
         
         k_day_df = fetch_block_kline_from_eastmoney(block_code,range_end,freq=QA.FREQUENCE.DAY)
         if k_day_df is None:
@@ -649,7 +656,7 @@ def update_all_block_kline(error_threhold=5,verbose=False):
             error_count+=1
             continue
         save_stock_block_kline(k_hour_df)
-        time.sleep(sleep_params[idx]/randint(1, 4))
+        time.sleep(sleep_params[idx]/randint(1, 3))
         
         k_5min_df = fetch_block_kline_from_eastmoney(block_code,range_end,freq=QA.FREQUENCE.FIVE_MIN)
         if k_5min_df is None:
@@ -677,7 +684,7 @@ def update_1min_block_kline(error_threhold=5,verbose=False):
     error_count = 0
     
     # 生成随机延迟
-    sleep_params = np.random.exponential(scale=0.3,size=total)+0.001
+    sleep_params = np.random.exponential(scale=1.3,size=total)+70
     
     for idx, block_code in tqdm(enumerate(all_code) ,total=total):
         if error_count > error_threhold:
@@ -686,7 +693,7 @@ def update_1min_block_kline(error_threhold=5,verbose=False):
         if verbose:
             print('start:',idx, block_code)
         
-        time.sleep(sleep_params[idx])
+        time.sleep(sleep_params[idx]/randint(1, 3))
         
         k_df = fetch_block_kline_realtime_from_eastmoney(block_code)
         if k_df is None:
@@ -694,9 +701,7 @@ def update_1min_block_kline(error_threhold=5,verbose=False):
             error_count+=1
             continue
         save_stock_block_kline(k_df)
-        time.sleep(sleep_params[idx]/randint(1, 3))
         
-        save_stock_block_kline(k_df)
         
 #         测试
 #         if idx == 2:
